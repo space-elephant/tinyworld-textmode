@@ -3,8 +3,6 @@ import requests
 import re
 import sys
 
-with open('404.txt') as f:missing = f.read()
-
 read = set()
 
 def load(file):
