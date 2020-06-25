@@ -69,34 +69,36 @@ class rule:
         if not self.valid:return
         for y in range(len(level)):
             for x in range(len(level[y])):
-                if not marked[y][x] and level[y][x] == self.start:
-                    testx = x
-                    testy = y
-                    found = True
-                    for test in range(0, len(self.data), 2):
-                        direction = self.data[test]
-                        if direction == right:testx += 1
-                        elif direction == left:testx -= 1
-                        elif direction == down:testy += 1
-                        elif direction == up:testy -= 1
-                        if marked[testy][testx] or level[testy][testx] != self.data[test+1]:
-                            found = False
-                            break
-                    if found:
-                        if self.mode == replace:
-                            marked[y][x] = True
-                            level[y][x] = self.newstart
-                            setx = x
-                            sety = y
-                            for point in range(0, len(self.result), 2):
-                                direction = self.result[point]
-                                if direction == right:setx += 1
-                                elif direction == left:setx -= 1
-                                elif direction == down:sety += 1
-                                elif direction == up:sety -= 1
-                                level[sety][setx] = self.result[point+1]
-                                marked[sety][setx] = True
-                        else:return (self.mode, self.result) # warp
+                try:
+                    if not marked[y][x] and level[y][x] == self.start:
+                        testx = x
+                        testy = y
+                        found = True
+                        for test in range(0, len(self.data), 2):
+                            direction = self.data[test]
+                            if direction == right:testx += 1
+                            elif direction == left:testx -= 1
+                            elif direction == down:testy += 1
+                            elif direction == up:testy -= 1
+                            if marked[testy][testx] or level[testy][testx] != self.data[test+1]:
+                                found = False
+                                break
+                        if found:
+                            if self.mode == replace:
+                                marked[y][x] = True
+                                level[y][x] = self.newstart
+                                setx = x
+                                sety = y
+                                for point in range(0, len(self.result), 2):
+                                    direction = self.result[point]
+                                    if direction == right:setx += 1
+                                    elif direction == left:setx -= 1
+                                    elif direction == down:sety += 1
+                                    elif direction == up:sety -= 1
+                                    level[sety][setx] = self.result[point+1]
+                                    marked[sety][setx] = True
+                            else:return (self.mode, self.result) # warp
+                except IndexError:pass
                                 
 def search(level, player):
     back = level[player[1]][player[0]]
