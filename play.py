@@ -2,6 +2,7 @@
 import sys
 import display
 import curses
+from rules import search, convert
 
 net = '-i' in sys.argv or '--net' in sys.argv
 
@@ -112,17 +113,31 @@ def main(screen):
             screen.clear()
             draw(level, player, screen)
             screen.refresh()
-            command = screen.getch()
             oldplayer = list(player)
-            if command == ord('w') or command == curses.KEY_UP:player[1] -= 1
-            elif command == ord('s') or command == curses.KEY_DOWN:player[1] += 1
-            elif command == ord('a') or command == curses.KEY_LEFT:player[0] -= 1
-            elif command == ord('d') or command == curses.KEY_RIGHT:player[0] += 1
+            command = screen.getch()
+            char = False
+            if command == ord('w') or command == curses.KEY_UP:
+                player[1] -= 1
+                char = True
+            elif command == ord('s') or command == curses.KEY_DOWN:
+                player[1] += 1
+                char = True
+            elif command == ord('a') or command == curses.KEY_LEFT:
+                player[0] -= 1
+                char = True
+            elif command == ord('d') or command == curses.KEY_RIGHT:
+                player[0] += 1
+                char = True
             elif command == ord('r'):break # restart
             elif command == ord('e') or command == ord('q'):exit()
             now = valid(level, player)
             if now == undo:player = oldplayer
             elif now == restart:break
+            if char:
+                data = search(level, player)
+                if data[0] == convert['@']:
+                    name = data[1]
+                    break
 
         if level[player[1]][player[0]] == 'Y':
             name = next(name)
