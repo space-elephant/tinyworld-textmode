@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import sys
 import display
-import readchar
+import curses
 
-net = '-n' in sys.argv or '--net' in sys.argv
+net = '-i' in sys.argv or '--net' in sys.argv
 
 def load(name):
     if net:raise TypeError('net is not yet supported')
@@ -11,20 +11,41 @@ def load(name):
         with open('levels/{}.txt'.format(name)) as f:data = f.read()
         return [list(x) for x in display.display(data)]
 
-def draw(data):
-    for x in data:print(''.join(x))
-
+def draw(data, player, screen):
+    #print('draw', sys.stderr)
+    for y in range(len(data)):
+        for x in range(len(data[y])):
+            #print(y, x, sys.stderr)
+            point = data[y][x]
+            if point == ' ':
+                if player == [x, y]:
+                    #print(y, x, repr('T'), sys.stderr)
+                    try:screen.addstr(y, x, 'T', curses.color_pair(onspace))
+                    except curses.error:pass
+            elif point == 'Y':
+                try:screen.addstr(y, x, 'Y', curses.color_pair(onspace))
+                except curses.error:pass
+            else:
+                if point in nonsolid:color = soft
+                elif point in deadly:color = death
+                else:color = wall
+                if player == [x, y]:color += onspace
+                #print(y, x, repr(data[y][x]), sys.stderr)
+                try:screen.addstr(y, x, data[y][x], curses.color_pair(color))
+                except curses.error:pass
+    sys.stdout.flush()
+            
 if '-y' in sys.argv:start = 'y'
 elif '-n' in sys.argv:start = 'n'
 elif '-e' in sys.argv:start = ''
 else:start = input('Play (Y/n) ')
 
 if start == '':
-    name = 'tutorial8'
+    first = 'tutorial8'
 elif start[0] == 'n' or start[0] == 'N':
-    name = 'tutorial0'
+    first = 'tutorial0'
 else:
-    name = 'tutorial1'
+    first = 'tutorial1'
 
 nonsolid = set(' AEIOY')
 deadly = set('PQRSTUVWXZ')
@@ -50,36 +71,56 @@ def next(name):
     return ''.join(edit)
 
 def valid(level, player):
-    point = level[player[0]][player[1]]
+    point = level[player[1]][player[0]]
     if point in nonsolid:return go
     if point in deadly:return restart
     return undo
 
-while True:
-    level = load(name)
-    player = None
-    for line in range(len(level)-1, -1, -1):
-        for tile in range(len(level[line])-1, -1, -1):
-            if level[line][tile] == 'T':
-                player = [line, tile]
-                break
-        if player != None:break
-        
-    while level[player[0]][player[1]] != 'Y':
-        level[player[0]].insert(player[1], "\u0304")#032A
-        draw(level)
-        level[player[0]].pop(player[1])
-        command = readchar.readchar()
-        oldplayer = list(player)
-        if command == 'w':player[0] -= 1
-        elif command == 's':player[0] += 1
-        elif command == 'a':player[1] -= 1
-        elif command == 'd':player[1] += 1
-        elif command == 'r':break # restart
-        elif command == 'e':exit()
-        now = valid(level, player)
-        if now == undo:player = oldplayer
-        elif now == restart:break
-        
-    if level[player[0]][player[1]] == 'Y':
-        name = next(name)
+onspace = 1
+death = 2
+ondeath = 3
+soft = 4
+onsoft = 5
+wall = 6
+onwall = 7
+
+def main(screen):
+    curses.curs_set(False)
+    curses.init_pair(death, curses.COLOR_RED, curses.COLOR_BLACK)
+    curses.init_pair(ondeath, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+    curses.init_pair(soft, curses.COLOR_BLUE, curses.COLOR_BLACK)
+    curses.init_pair(onsoft, curses.COLOR_CYAN, curses.COLOR_BLACK)
+    curses.init_pair(wall, curses.COLOR_WHITE, curses.COLOR_BLACK)
+    curses.init_pair(onwall, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
+    curses.init_pair(onspace, curses.COLOR_GREEN, curses.COLOR_BLACK)
+    name = first
+    while True:
+        level = load(name)
+        player = None
+        for line in range(len(level)-1, -1, -1):
+            for tile in range(len(level[line])-1, -1, -1):
+                if level[line][tile] == 'T':
+                    player = [tile, line]
+                    break
+            if player != None:break
+
+        while level[player[1]][player[0]] != 'Y':
+            screen.clear()
+            draw(level, player, screen)
+            screen.refresh()
+            command = chr(screen.getch())
+            oldplayer = list(player)
+            if command == 'w':player[1] -= 1
+            elif command == 's':player[1] += 1
+            elif command == 'a':player[0] -= 1
+            elif command == 'd':player[0] += 1
+            elif command == 'r':break # restart
+            elif command == 'e':exit()
+            now = valid(level, player)
+            if now == undo:player = oldplayer
+            elif now == restart:break
+
+        if level[player[1]][player[0]] == 'Y':
+            name = next(name)
+
+curses.wrapper(main)
