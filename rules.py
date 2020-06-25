@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
+from math import copysign
+def sign(x):
+    return copysign(1, x) if x else 0
+
 right = 0
 up = 1
 left = 2
 down = 3
-#toT = 4
-#fromT = 5
+toT = 4
+fromT = 5
 replace = 6
 warp = 7
 music = 8
@@ -15,8 +19,8 @@ convert = {
     '^': up,
     '<': left,
     'v': down,
- #   '(': toT,
-  #  ')': fromT,
+    '(': toT,
+    ')': fromT,
     '=': replace,
     '@': warp,
     'm': music,
@@ -70,6 +74,13 @@ class rule:
         for y in range(len(level)):
             for x in range(len(level[y])):
                 try:
+                    playerrelative = (x - player[0], y - player[1])
+                    loc7, loc6 = 0, 0
+                    if abs(playerrelative[0]) >= abs(playerrelative[1]):
+                        loc7 = int(sign(playerrelative[0]))
+                    else:
+                        loc6 = int(sign(playerrelative[1]))
+
                     if not marked[y][x] and level[y][x] == self.start:
                         testx = x
                         testy = y
@@ -80,6 +91,12 @@ class rule:
                             elif direction == left:testx -= 1
                             elif direction == down:testy += 1
                             elif direction == up:testy -= 1
+                            elif direction == fromT:
+                                testx += loc7
+                                testy += loc6
+                            elif direction == toT:
+                                testx -= loc7
+                                testy -= loc6
                             if marked[testy][testx] or level[testy][testx] != self.data[test+1]:
                                 found = False
                                 break
@@ -95,6 +112,12 @@ class rule:
                                     elif direction == left:setx -= 1
                                     elif direction == down:sety += 1
                                     elif direction == up:sety -= 1
+                                    elif direction == fromT:
+                                        setx += loc7
+                                        sety += loc6
+                                    elif direction == toT:
+                                        setx -= loc7
+                                        sety -= loc6
                                     level[sety][setx] = self.result[point+1]
                                     marked[sety][setx] = True
                             else:return (self.mode, self.result) # warp
