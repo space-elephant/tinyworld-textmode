@@ -34,7 +34,11 @@ def draw(data, player, screen):
                 try:screen.addstr(y, x, data[y][x], curses.color_pair(color))
                 except curses.error:pass
     sys.stdout.flush()
-            
+
+print('T in Y World by Tom VII for Ludum Dare 23.')
+print()
+
+    
 if '-y' in sys.argv:start = 'y'
 elif '-n' in sys.argv:start = 'n'
 elif '-e' in sys.argv:start = ''
@@ -114,7 +118,7 @@ def main(screen):
             elif command == ord('s') or command == curses.KEY_DOWN:player[1] += 1
             elif command == ord('a') or command == curses.KEY_LEFT:player[0] -= 1
             elif command == ord('d') or command == curses.KEY_RIGHT:player[0] += 1
-            elif command == ord('r') or command == curses.KEY_ESCAPE:break # restart
+            elif command == ord('r'):break # restart
             elif command == ord('e') or command == ord('q'):exit()
             now = valid(level, player)
             if now == undo:player = oldplayer
