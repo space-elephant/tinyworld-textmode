@@ -108,14 +108,14 @@ def main(screen):
             screen.clear()
             draw(level, player, screen)
             screen.refresh()
-            command = chr(screen.getch())
+            command = screen.getch()
             oldplayer = list(player)
-            if command == 'w':player[1] -= 1
-            elif command == 's':player[1] += 1
-            elif command == 'a':player[0] -= 1
-            elif command == 'd':player[0] += 1
-            elif command == 'r':break # restart
-            elif command == 'e':exit()
+            if command == ord('w') or command == curses.KEY_UP:player[1] -= 1
+            elif command == ord('s') or command == curses.KEY_DOWN:player[1] += 1
+            elif command == ord('a') or command == curses.KEY_LEFT:player[0] -= 1
+            elif command == ord('d') or command == curses.KEY_RIGHT:player[0] += 1
+            elif command == ord('r') or command == curses.KEY_ESCAPE:break # restart
+            elif command == ord('e') or command == ord('q'):exit()
             now = valid(level, player)
             if now == undo:player = oldplayer
             elif now == restart:break
