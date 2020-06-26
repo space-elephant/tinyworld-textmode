@@ -76,7 +76,8 @@ def next(name):
     return ''.join(edit)
 
 def valid(level, player):
-    point = level[player[1]][player[0]]
+    try:point = level[player[1]][player[0]]
+    except IndexError:return undo
     if point in nonsolid:return go
     if point in deadly:return restart
     return undo
@@ -99,16 +100,18 @@ def main(screen):
     curses.init_pair(onwall, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
     curses.init_pair(onspace, curses.COLOR_GREEN, curses.COLOR_BLACK)
     name = first
+    player = None
     while True:
         level = load(name)
-        player = None
+        found = False
         for line in range(len(level)-1, -1, -1):
             for tile in range(len(level[line])-1, -1, -1):
                 if level[line][tile] == 'T':
                     player = [tile, line]
+                    found = True
                     break
-            if player != None:break
-
+            if found:break
+        with open('log.txt', 'w') as f:f.write('{} {}\n'.format(len(level), player))
         while level[player[1]][player[0]] != 'Y':
             screen.clear()
             draw(level, player, screen)

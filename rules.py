@@ -36,7 +36,7 @@ class rule:
         while True:
             try:
                 if convert[string[index]] >= replace:break
-            except KeyError:
+            except (KeyError, IndexError):
                 self.valid = False
                 return
             self.data.append(convert[string[index]])
