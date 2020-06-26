@@ -66,7 +66,11 @@ class rule:
         else:
             while True:
                 index += 1
-                if string[index] == '.':break
+                try:
+                    if string[index] == '.':break
+                except IndexError:
+                    self.valid = False
+                    return
                 self.result.append(string[index])
             self.end = index
     def match(self, level, player, marked):
