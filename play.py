@@ -3,14 +3,21 @@ import sys
 import display
 import curses
 from rules import search, convert
+import requests
 
 net = '-i' in sys.argv or '--net' in sys.argv
 
 def load(name):
-    if net:raise TypeError('net is not yet supported')
+    if net:
+        data = requests.get('http://spacebar.org/f/a/tinyworld/get/{}'.format(name)).text
     else:
-        with open('levels/{}.txt'.format(name)) as f:data = f.read()
-        return [list(x) for x in display.display(data)]
+        try:
+            with open('levels/{}.txt'.format(name)) as f:data = f.read()
+        except FileNotFoundError:
+            with open('404.txt') as f:data = f.read()
+    return [list(x) for x in display.display(data)]
+
+copycolor = '-g' in sys.argv
 
 def draw(data, player, screen):
     #print('draw', sys.stderr)
@@ -21,19 +28,38 @@ def draw(data, player, screen):
             if point == ' ':
                 if player == [x, y]:
                     #print(y, x, repr('T'), sys.stderr)
-                    try:screen.addstr(y, x, 'T', curses.color_pair(onspace))
+                    try:
+                        if copycolor:
+                            screen.addstr(y, x, 'T',
+                                          curses.color_pair(red))
+                        else:
+                            screen.addstr(y, x, 'T', curses.color_pair(onspace))
                     except curses.error:pass
-            elif point == 'Y':
+            elif point == 'Y' and not copycolor:
                 try:screen.addstr(y, x, 'Y', curses.color_pair(onspace))
                 except curses.error:pass
             else:
-                if point in nonsolid:color = soft
-                elif point in deadly:color = death
-                else:color = wall
-                if player == [x, y]:color += onspace
-                #print(y, x, repr(data[y][x]), sys.stderr)
-                try:screen.addstr(y, x, data[y][x], curses.color_pair(color))
-                except curses.error:pass
+                if copycolor:
+                    try:pair = colors[point]
+                    except KeyError:pair = (white, 0)
+                    color = pair[0]
+                    flag = pair[1]
+                    try:
+                        if player == [x, y]:
+                            screen.addstr(y, x, 'T',
+                                          curses.color_pair(red))
+                        else:screen.addstr(y, x, data[y][x],
+                                           curses.color_pair(color) | flag)
+                    except curses.error:pass
+                else:
+                    if point in nonsolid:color = soft
+                    elif point in deadly:color = death
+                    else:color = wall
+                    if player == [x, y]:color += onspace
+                    #print(y, x, repr(data[y][x]), sys.stderr)
+                    try:screen.addstr(y, x, data[y][x],
+                                      curses.color_pair(color))
+                    except curses.error:pass
     sys.stdout.flush()
 
 print('T in Y World by Tom VII for Ludum Dare 23.')
@@ -47,10 +73,12 @@ else:start = input('Play (Y/n) ')
 
 if start == '':
     first = 'tutorial8'
-elif start[0] == 'n' or start[0] == 'N':
+elif start == 'n' or start == 'N':
     first = 'tutorial0'
-else:
+elif start == 'y' or start == 'Y':
     first = 'tutorial1'
+else:
+    first = start
 
 nonsolid = set(' AEIOY')
 deadly = set('PQRSTUVWXZ')
@@ -82,23 +110,76 @@ def valid(level, player):
     if point in deadly:return restart
     return undo
 
-onspace = 1
-death = 2
-ondeath = 3
-soft = 4
-onsoft = 5
-wall = 6
-onwall = 7
+green = 1
+blue = 2
+cyan = 3
+red = 4
+yellow = 5
+white = 6
+magenta = 7
+
+onspace = green
+death = red
+ondeath = yellow
+soft = blue
+onsoft = cyan
+wall = white
+onwall = magenta
+
+colors = {
+    'A': (blue, 0),
+    'B': (cyan, 0),
+    'C': (blue, 0),
+    'D': (blue, 0),
+    'E': (cyan, 0),
+    'F': (cyan, 0),
+    'G': (green, 0),
+    'H': (yellow, 0),
+    'I': (blue, 0),
+    'J': (red, 0),
+    'K': (magenta, 0),
+    'L': (magenta, curses.A_DIM),
+    'M': (blue, 0),
+    'N': (white, curses.A_DIM),
+    'O': (green, 0),
+    'P': (magenta, curses.A_DIM),
+    'Q': (red, curses.A_DIM),
+    'R': (yellow, 0),
+    'S': (yellow, curses.A_DIM),
+    'T': (red, curses.A_DIM),
+    'U': (yellow, 0),
+    'V': (red, 0),
+    'W': (yellow, 0),
+    'X': (magenta, 0),
+    'Y': (yellow, 0),
+    'Z': (magenta, curses.A_DIM),
+    '=': (yellow, 0),
+    '\\':(magenta, 0),
+    '/': (blue, 0),
+    "'": (cyan, 0),
+    ',': (cyan, 0),
+    '~': (yellow, 0),
+    '!': (red, 0),
+    '@': (red, 0),
+    '#': (white, curses.A_DIM),
+    '+': (white, curses.A_DIM),
+    '$': (cyan, 0),
+    '%': (green, 0),
+    '^': (green, 0),
+    '&': (green, curses.A_DIM),
+    '*': (yellow, 0),
+    '?': (yellow, 0),
+}
 
 def main(screen):
     curses.curs_set(False)
-    curses.init_pair(death, curses.COLOR_RED, curses.COLOR_BLACK)
-    curses.init_pair(ondeath, curses.COLOR_YELLOW, curses.COLOR_BLACK)
-    curses.init_pair(soft, curses.COLOR_BLUE, curses.COLOR_BLACK)
-    curses.init_pair(onsoft, curses.COLOR_CYAN, curses.COLOR_BLACK)
-    curses.init_pair(wall, curses.COLOR_WHITE, curses.COLOR_BLACK)
-    curses.init_pair(onwall, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
-    curses.init_pair(onspace, curses.COLOR_GREEN, curses.COLOR_BLACK)
+    curses.init_pair(red, curses.COLOR_RED, curses.COLOR_BLACK)
+    curses.init_pair(yellow, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+    curses.init_pair(blue, curses.COLOR_BLUE, curses.COLOR_BLACK)
+    curses.init_pair(cyan, curses.COLOR_CYAN, curses.COLOR_BLACK)
+    curses.init_pair(white, curses.COLOR_WHITE, curses.COLOR_BLACK)
+    curses.init_pair(magenta, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
+    curses.init_pair(green, curses.COLOR_GREEN, curses.COLOR_BLACK)
     name = first
     player = None
     while True:
