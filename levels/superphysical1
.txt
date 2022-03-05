@@ -1,0 +1,5 @@
+<b>Program name:</b> [tinyworld/get/superphysical1
+]
+<p><p><b>Error</b> ((continue) internally <code>aphid.cc:221</code>):
+Gave invalid program name!
+
