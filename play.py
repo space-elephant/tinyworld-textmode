@@ -4,11 +4,19 @@ import display
 import curses
 from rules import search, convert
 import requests
+import argparse
 
-net = '-i' in sys.argv or '--net' in sys.argv
+parser = argparse.ArgumentParser(description='Play T in Y world in your teminal')
+parser.add_argument('-s', '--spacebar', action='store_true', help='download from original spacebar website')
+parser.add_argument('-c', '--recolour', action='store_true', help='use colours to represent effects, instead of like the original')
+parser.add_argument('-g', '--google', action='store_true', help='use google')
+args = parser.parse_args()
+google = args.google
+copycolor = not args.recolour
+spacebar = args.spacebar
 
 def load(name):
-    if net:
+    if spacebar:
         data = requests.get('http://spacebar.org/f/a/tinyworld/get/{}'.format(name)).text
     else:
         try:
@@ -16,8 +24,6 @@ def load(name):
         except FileNotFoundError:
             with open('404.txt') as f:data = f.read()
     return [list(x) for x in display.display(data)]
-
-copycolor = '-g' in sys.argv
 
 def draw(data, player, screen):
     #print('draw', sys.stderr)
@@ -192,7 +198,7 @@ def main(screen):
                     found = True
                     break
             if found:break
-        with open('log.txt', 'w') as f:f.write('{} {}\n'.format(len(level), player))
+        #with open('log.txt', 'w') as f:f.write('{} {}\n'.format(len(level), player))
         while level[player[1]][player[0]] != 'Y':
             screen.clear()
             draw(level, player, screen)
