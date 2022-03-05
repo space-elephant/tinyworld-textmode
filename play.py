@@ -12,7 +12,6 @@ parser.add_argument('-g', '--google', action='store_true', help='use google')
 args = parser.parse_args()
 google = args.google
 copycolor = not args.recolour
-spacebar = args.spacebar
 
 def load(name):
     try:
