@@ -7,7 +7,6 @@ import requests
 import argparse
 
 parser = argparse.ArgumentParser(description='Play T in Y world in your teminal')
-parser.add_argument('-s', '--spacebar', action='store_true', help='download from original spacebar website')
 parser.add_argument('-c', '--recolour', action='store_true', help='use colours to represent effects, instead of like the original')
 parser.add_argument('-g', '--google', action='store_true', help='use google')
 args = parser.parse_args()
@@ -16,18 +15,15 @@ copycolor = not args.recolour
 spacebar = args.spacebar
 
 def load(name):
-    if spacebar:
-        data = requests.get('http://spacebar.org/f/a/tinyworld/get/{}'.format(name)).text
-    else:
-        try:
-            with open('levels/{}.txt'.format(name)) as f:data = f.read()
-            return [list(x) for x in display.display(data)]
-        except FileNotFoundError:
-            with open('404.txt') as f:data = f.read()
-            points = [list(x) for x in display.display(data)]
-            for i in range(len(name)):
-                points[1][i+2] = name[i]
-            return points
+    try:
+        with open('levels/{}.txt'.format(name)) as f:data = f.read()
+        return [list(x) for x in display.display(data)]
+    except FileNotFoundError:
+        with open('404.txt') as f:data = f.read()
+        points = [list(x) for x in display.display(data)]
+        for i in range(len(name)):
+            points[1][i+2] = name[i]
+        return points
 
 def draw(data, player, screen):
     #print('draw', sys.stderr)
