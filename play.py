@@ -21,9 +21,13 @@ def load(name):
     else:
         try:
             with open('levels/{}.txt'.format(name)) as f:data = f.read()
+            return [list(x) for x in display.display(data)]
         except FileNotFoundError:
             with open('404.txt') as f:data = f.read()
-    return [list(x) for x in display.display(data)]
+            points = [list(x) for x in display.display(data)]
+            for i in range(len(name)):
+                points[1][i+2] = name[i]
+            return points
 
 def draw(data, player, screen):
     #print('draw', sys.stderr)
