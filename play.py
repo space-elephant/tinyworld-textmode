@@ -186,7 +186,7 @@ def main(screen):
     curses.init_pair(magenta, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
     curses.init_pair(green, curses.COLOR_GREEN, curses.COLOR_BLACK)
     name = first
-    player = None
+    player = [20, 20]
     while True:
         level = load(name)
         found = False
