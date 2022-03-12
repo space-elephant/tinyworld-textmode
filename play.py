@@ -35,8 +35,7 @@ def draw(data, player, screen):
                     #print(y, x, repr('T'), sys.stderr)
                     try:
                         if copycolor:
-                            screen.addstr(y, x, 'T',
-                                          curses.color_pair(red))
+                            screen.addstr(y, x, 'T', curses.color_pair(red))
                         else:
                             screen.addstr(y, x, 'T', curses.color_pair(onspace))
                     except curses.error:pass
@@ -176,6 +175,62 @@ colors = {
     '?': (yellow, 0),
 }
 
+def edit(screen, name, player):
+    curses.curs_set(True)
+    clipboard = None
+    reset = True
+    while True:
+        level = load(name)
+        while True:
+            screen.clear()
+            draw(level, None, screen)
+            screen.addstr(len(level), 1, name)
+            #screen.addstr(len(level) + 1, 1, str(clipboard)[:50])
+            #screen.addstr(len(level) + 2, 1, str(reset))
+            screen.refresh()
+            screen.move(player[1], player[0])
+            command = screen.getch()
+            if command == curses.KEY_UP:
+                player[1] -= 1
+                if player[1] < 0:player[1] = 0
+                reset = True
+            elif command == curses.KEY_DOWN:
+                player[1] += 1
+                if player[1] >= len(level):player[1] = len(level)-1
+                reset = True
+            elif command == curses.KEY_LEFT:
+                player[0] -= 1
+                if player[0] < 0:player[0] = 0
+                reset = True
+            elif command == curses.KEY_RIGHT:
+                player[0] += 1
+                if player[0] >= len(level[0]):player[0] = len(level[0])-1
+                reset = True
+            elif command == curses.KEY_F1:
+                if reset:clipboard = []
+                reset = False
+                if any(x for x in level[player[1]] if x != ' '):
+                    clipboard.append(level[player[1]])
+                    level[player[1]] = ' ' * len(level[player[1]])
+                else:
+                    level.append(level.pop(player[1]))
+            elif command == curses.KEY_F2:
+                level = (level[:player[1]] + clipboard + level[player[1]:])[:len(level)]
+                clipboard = [list(x) for x in clipboard]
+            elif command == curses.KEY_F3:pass # save
+            elif command == curses.KEY_F4:pass # go to another level
+            elif command == ord('\t'):
+                curses.curs_set(False)
+                return name, level
+            elif command == curses.KEY_BACKSPACE:
+                level[player[1]][player[0]-1] = ' '
+                player[0] -= 1
+                reset = True
+            else:
+                level[player[1]][player[0]] = chr(command)
+                player[0] += 1
+                reset = True
+
 def main(screen):
     curses.curs_set(False)
     curses.init_pair(red, curses.COLOR_RED, curses.COLOR_BLACK)
@@ -187,8 +242,10 @@ def main(screen):
     curses.init_pair(green, curses.COLOR_GREEN, curses.COLOR_BLACK)
     name = first
     player = [20, 20]
+    edited = False
     while True:
-        level = load(name)
+        if not edited:level = load(name)
+        edited = False
         found = False
         for line in range(len(level)-1, -1, -1):
             for tile in range(len(level[line])-1, -1, -1):
@@ -219,6 +276,10 @@ def main(screen):
                 char = True
             elif command == ord('r'):break # restart
             elif command == ord('e') or command == ord('q'):exit()
+            elif command == ord('\t'):
+                name, level = edit(screen, name, player)
+                edited = True
+                break
             now = valid(level, player)
             if now == undo:player = oldplayer
             elif now == restart:break
@@ -228,7 +289,7 @@ def main(screen):
                     name = data[1]
                     break
 
-        if level[player[1]][player[0]] == 'Y':
+        if level[player[1]][player[0]] == 'Y' and not edited:
             name = next(name)
 
 curses.wrapper(main)
