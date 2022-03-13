@@ -20,7 +20,7 @@ def load(name):
         with open('levels/{}.txt'.format(name)) as f:data = f.read()
         return [list(x) for x in display.display(data)]
     except FileNotFoundError:
-        with open('404.txt') as f:data = f.read()
+        with open('data/404.txt') as f:data = f.read()
         points = [list(x) for x in display.display(data)]
         for i in range(len(name)):
             points[1][i+2] = name[i]
@@ -243,7 +243,7 @@ def edit(screen, name, player):
                 level = (level[:player[1]] + clipboard + level[player[1]:])[:len(level)]
                 clipboard = [list(x) for x in clipboard]
             elif command == curses.KEY_F3:
-                with open('protected.txt') as f:
+                with open('data/protected.txt') as f:
                     protected = name + '\n' in f.readlines()
                 if protected:
                     if deprotect:saveline = 'saved to protected level'
