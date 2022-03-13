@@ -108,6 +108,7 @@ def next(name):
     return ''.join(edit)
 
 def valid(level, player):
+    if player[0] < 0 or player[1] < 0:return undo
     try:point = level[player[1]][player[0]]
     except IndexError:return undo
     if point in nonsolid:return go
