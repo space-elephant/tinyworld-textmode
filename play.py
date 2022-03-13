@@ -175,6 +175,25 @@ colors = {
     '?': (yellow, 0),
 }
 
+def getlevel(screen, name, x, y):
+    screen.move(y, len(name) + x)
+    data = list(name)
+    while True:
+        char = screen.getch()
+        if char == ord('\n'):return ''.join(data)
+        elif char == curses.KEY_BACKSPACE:
+            if len(data) > 0:
+                data.pop()
+                screen.addstr(y, len(data) + x, ' ')
+                screen.refresh()
+                screen.move(y, len(data) + x)
+        elif (char >= ord('a') and char <= ord('z') or
+              char >= ord('A') and char <= ord('Z') or
+              char >= ord('0') and char <= ord('9')):
+            screen.addstr(y, len(data) + x, chr(char))
+            screen.refresh()
+            data.append(chr(char))
+
 def edit(screen, name, player):
     curses.curs_set(True)
     clipboard = None
@@ -218,7 +237,11 @@ def edit(screen, name, player):
                 level = (level[:player[1]] + clipboard + level[player[1]:])[:len(level)]
                 clipboard = [list(x) for x in clipboard]
             elif command == curses.KEY_F3:pass # save
-            elif command == curses.KEY_F4:pass # go to another level
+            elif command == curses.KEY_F4:
+                screen.refresh()
+                name = getlevel(screen, name, 1, len(level))
+                reset = True
+                break
             elif command == ord('\t'):
                 curses.curs_set(False)
                 return name, level
