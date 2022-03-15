@@ -9,13 +9,24 @@ import argparse
 parser = argparse.ArgumentParser(description='Play T in Y world in your teminal')
 parser.add_argument('-c', '--recolour', action='store_true', help='use colours to represent effects, instead of like the original')
 parser.add_argument('-g', '--google', action='store_true', help='use google')
-parser.add_argument('-f', '--force-save', action='store_true', help='enables save even onto a protected levels and enables downloading protected levels if -g is set')
+parser.add_argument('-f', '--force-save', action='store_true', help='enables save even onto protected levels, and enables downloading protected levels if -g is set')
 args = parser.parse_args()
 google = args.google
 copycolor = not args.recolour
 deprotect = args.force_save
 
+def isall(name):
+    if name == 'all0':return True
+    if name[:3] != 'all':return False
+    if len(name) <= 3:return False
+    if name[3] == '0':return False
+    for char in name[3:]:
+        if char not in '0123456789':return False
+    return True
+        
 def load(name):
+    if isall(name):
+        pass # create list world
     try:
         with open('levels/{}.txt'.format(name)) as f:data = f.read()
         return [list(x) for x in display.display(data)]
@@ -234,7 +245,7 @@ def edit(screen, name, player):
             elif command == curses.KEY_F1:
                 if reset:clipboard = []
                 reset = False
-                if any(x for x in level[player[1]] if x != ' '):
+                if any(True for x in level[player[1]] if x != ' '):
                     clipboard.append(level[player[1]])
                     level[player[1]] = ' ' * len(level[player[1]])
                 else:
@@ -243,17 +254,19 @@ def edit(screen, name, player):
                 level = (level[:player[1]] + clipboard + level[player[1]:])[:len(level)]
                 clipboard = [list(x) for x in clipboard]
             elif command == curses.KEY_F3:
-                with open('data/protected.txt') as f:
-                    protected = name + '\n' in f.readlines()
-                if protected:
-                    if deprotect:saveline = 'saved to protected level'
-                    else:saveline = 'cannot save to protected level (no -f)'
-                else:saveline = 'saved'
-                if deprotect or not protected:
-                    string = ''.join(''.join(x) for x in level)
-                    with open('levels/{}.txt'.format(name), 'w') as f:f.write(string)
-                    # TODO: Use google if -g is passed
-                screen.refresh()
+                if isall(name):
+                    saveline = 'cannot save to {} (even with -f)'.format(name)
+                else:
+                    with open('data/protected.txt') as f:
+                        protected = name + '\n' in f.readlines()
+                    if protected:
+                        if deprotect:saveline = 'saved to protected level'
+                        else:saveline = 'cannot save to protected level (no -f)'
+                    else:saveline = 'saved'
+                    if deprotect or not protected:
+                        string = ''.join(''.join(x) for x in level)
+                        with open('levels/{}.txt'.format(name), 'w') as f:f.write(string)
+                        # TODO: Use google if -g is passed
             elif command == curses.KEY_F4:
                 screen.refresh()
                 name = getlevel(screen, name, 1, len(level))
