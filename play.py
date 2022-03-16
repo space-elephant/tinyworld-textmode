@@ -294,6 +294,14 @@ def edit(screen, name, player):
                     if deprotect or not protected:
                         string = ''.join(''.join(x) for x in level)
                         with open('levels/{}.txt'.format(name), 'w') as f:f.write(string)
+                        with open('data/levels.txt') as f:
+                            levels = f.readlines()
+                        fullline = name + '\n'
+                        if fullline in levels:
+                            levels.remove(fullline)
+                        levels.insert(0, fullline)
+                        with open('data/levels.txt', 'w') as f:
+                            f.write(''.join(levels))
                         # TODO: Use google if -g is passed
             elif command == curses.KEY_F4:
                 screen.refresh()
