@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-from math import copysign
 def sign(x):
-    return copysign(1, x) if x else 0
+    if x < 0:return -1
+    if x > 0:return 1
+    return 0
 
 right = 0
 up = 1
