@@ -80,11 +80,11 @@ class rule:
             for x in range(len(level[y])):
                 try:
                     playerrelative = (x - player[0], y - player[1])
-                    loc7, loc6 = 0, 0
+                    directionx, directiony = 0, 0
                     if abs(playerrelative[0]) >= abs(playerrelative[1]):
-                        loc7 = int(sign(playerrelative[0]))
+                        directionx = int(sign(playerrelative[0]))
                     else:
-                        loc6 = int(sign(playerrelative[1]))
+                        directiony = int(sign(playerrelative[1]))
 
                     if not marked[y][x] and level[y][x] == self.start:
                         testx = x
@@ -97,11 +97,11 @@ class rule:
                             elif direction == down:testy += 1
                             elif direction == up:testy -= 1
                             elif direction == fromT:
-                                testx += loc7
-                                testy += loc6
+                                testx += directionx
+                                testy += directiony
                             elif direction == toT:
-                                testx -= loc7
-                                testy -= loc6
+                                testx -= directionx
+                                testy -= directiony
                             if marked[testy][testx] or level[testy][testx] != self.data[test+1]:
                                 found = False
                                 break
@@ -118,11 +118,11 @@ class rule:
                                     elif direction == down:sety += 1
                                     elif direction == up:sety -= 1
                                     elif direction == fromT:
-                                        setx += loc7
-                                        sety += loc6
+                                        setx += directionx
+                                        sety += directiony
                                     elif direction == toT:
-                                        setx -= loc7
-                                        sety -= loc6
+                                        setx -= directionx
+                                        sety -= directiony
                                     level[sety][setx] = self.result[point+1]
                                     marked[sety][setx] = True
                             else:return (self.mode, self.result) # warp
