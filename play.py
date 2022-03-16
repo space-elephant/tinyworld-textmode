@@ -5,6 +5,7 @@ import curses
 from rules import search, convert
 import requests
 import argparse
+import os
 
 parser = argparse.ArgumentParser(description='Play T in Y world in your teminal')
 parser.add_argument('-c', '--recolour', action='store_true', help='use colours to represent effects, instead of like the original')
@@ -14,6 +15,11 @@ args = parser.parse_args()
 google = args.google
 copycolor = not args.recolour
 deprotect = args.force_save
+
+def save(file, data):
+    backup = '{}.bak'.format(file)
+    with open(backup, 'w') as f:f.write(data)
+    os.replace(backup, file)
 
 def isall(name):
     if name == 'all0':return True
@@ -293,15 +299,14 @@ def edit(screen, name, player):
                     else:saveline = 'saved'
                     if deprotect or not protected:
                         string = ''.join(''.join(x) for x in level)
-                        with open('levels/{}.txt'.format(name), 'w') as f:f.write(string)
+                        save('levels/{}.txt'.format(name), string)
                         with open('data/levels.txt') as f:
                             levels = f.readlines()
                         fullline = name + '\n'
                         if fullline in levels:
                             levels.remove(fullline)
                         levels.insert(0, fullline)
-                        with open('data/levels.txt', 'w') as f:
-                            f.write(''.join(levels))
+                        save('data/levels.txt', ''.join(levels))
                         # TODO: Use google if -g is passed
             elif command == curses.KEY_F4:
                 screen.refresh()
@@ -343,7 +348,6 @@ def main(screen):
                     found = True
                     break
             if found:break
-        #with open('log.txt', 'w') as f:f.write('{} {}\n'.format(len(level), player))
         while level[player[1]][player[0]] != 'Y':
             screen.clear()
             draw(level, player, screen)
