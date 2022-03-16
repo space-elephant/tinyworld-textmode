@@ -26,7 +26,35 @@ def isall(name):
         
 def load(name):
     if isall(name):
-        pass # create list world
+        with open('data/levels.txt') as f:levels = f.readlines()
+        with open('data/all.txt') as f:data = f.read()
+        with open('data/error.txt') as f:error = list(f.read())
+        error.pop()
+        points = [list(x) for x in display.display(data)]
+        number = int(name[3:])
+        min = number * 18
+        max = min + 18
+        if number == 0:
+            points[4][6:38] = [' '] * 32
+        else:
+            string = str(number-1) + '.'
+            points[4][13:13+len(string)] = list(string)
+        if max >= len(levels):
+            points[23][6:38] = [' '] * 32
+        else:
+            string = str(number+1) + '.'
+            points[23][13:13+len(string)] = list(string)
+        for i in range(18):
+            if min+i >= len(levels):
+                points[i+5][6] = ' '
+                points[i+5][8:8+len(error)] = error
+            else:
+                level = list(levels[min+i])
+                level[-1] = '.'
+                points[i+5][10:10+len(level)] = level
+        string = str(number)
+        points[1][22:22+len(string)] = list(string)
+        return points
     try:
         with open('levels/{}.txt'.format(name)) as f:data = f.read()
         return [list(x) for x in display.display(data)]
