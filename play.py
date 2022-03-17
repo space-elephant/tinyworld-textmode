@@ -276,7 +276,7 @@ def edit(screen, name, player):
                 player[0] += 1
                 if player[0] >= len(level[0]):player[0] = len(level[0])-1
                 reset = True
-            elif command == curses.KEY_F1:
+            elif command == 11:
                 if reset:clipboard = []
                 reset = False
                 if any(True for x in level[player[1]] if x != ' '):
@@ -284,10 +284,10 @@ def edit(screen, name, player):
                     level[player[1]] = ' ' * len(level[player[1]])
                 else:
                     level.append(level.pop(player[1]))
-            elif command == curses.KEY_F2:
+            elif command == 25:
                 level = (level[:player[1]] + clipboard + level[player[1]:])[:len(level)]
                 clipboard = [list(x) for x in clipboard]
-            elif command == curses.KEY_F3:
+            elif command == 19 or command == 24:
                 if isall(name):
                     saveline = 'cannot save to {} (even with -f)'.format(name)
                 else:
@@ -308,11 +308,13 @@ def edit(screen, name, player):
                         levels.insert(0, fullline)
                         save('data/levels.txt', ''.join(levels))
                         # TODO: Use google if -g is passed
-            elif command == curses.KEY_F4:
+            elif command == 7:
                 screen.refresh()
                 name = getlevel(screen, name, 1, len(level))
                 reset = True
                 break
+            elif command == 1:player[0] = 0
+            elif command == 5:player[0] = len(level[player[1]])-1
             elif command == ord('\t'):
                 curses.curs_set(False)
                 return name, level
