@@ -322,7 +322,10 @@ def edit(screen, name, player):
                 level[player[1]][player[0]-1] = ' '
                 player[0] -= 1
                 reset = True
-            else:
+            elif (command >= ord('A') and command <= ord('Z') or
+                  command >= ord('a') and command <= ord('z') or
+                  command >= ord('0') and command <= ord('9') or
+                  chr(command) in '`-=[]\\;\',./~!@#$%^&*()_+{}|:"<>?'):
                 level[player[1]][player[0]] = chr(command)
                 player[0] += 1
                 reset = True
