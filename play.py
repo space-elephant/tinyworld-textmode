@@ -20,10 +20,10 @@ config = {
 
 parser = argparse.ArgumentParser(description='Play T in Y world in your teminal')
 parser.add_argument('-c', '--recolour', action='store_true', help='use colours to represent effects, instead of like the original')
-parser.add_argument('-g', '--google', action='store_true', help='use google')
+parser.add_argument('-l', '--local', action='store_true', help='disable google')
 parser.add_argument('-f', '--force-save', action='store_true', help='enables save even onto protected levels, and enables downloading protected levels if -g is set')
 args = parser.parse_args()
-google = args.google
+google = not args.local
 copycolor = not args.recolour
 deprotect = args.force_save
 
