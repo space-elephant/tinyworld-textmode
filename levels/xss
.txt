@@ -1,5 +1,0 @@
-<b>Program name:</b> [tinyworld/get/xss
-]
-<p><p><b>Error</b> ((continue) internally <code>aphid.cc:221</code>):
-Gave invalid program name!
-
