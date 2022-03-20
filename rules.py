@@ -14,17 +14,21 @@ replace = '='
 warp = '@'
 music = 'm'
 end = '.'
-line = '-'
+forward = ']'
+backward = '['
+any = 'a'
+remote = 'r'
 
 class rule:
     def __init__(self, string):
+        self.string = string
         self.valid = True
         self.start = string[0]
         self.data = []
         index = 1
         while True:
             try:
-                if string[index] >= replace:break
+                if string[index] in (replace, warp, music):break
             except (KeyError, IndexError):
                 self.valid = False
                 return
@@ -32,9 +36,6 @@ class rule:
             self.data.append(string[index+1])
             index += 2
         self.mode = string[index]
-        if self.mode == end:
-            self.valid = False
-            return
         self.newstart = None
         self.result = []
         if self.mode == replace:
@@ -79,7 +80,11 @@ class rule:
                         testy = y
                         found = True
                         for test in range(0, len(self.data), 2):
+                            strict = True
                             direction = self.data[test]
+                            if direction == any:
+                                strict = False
+                                direction = self.data[test+1]
                             if direction == right:testx += 1
                             elif direction == left:testx -= 1
                             elif direction == down:testy += 1
@@ -90,7 +95,7 @@ class rule:
                             elif direction == toT:
                                 testx -= directionx
                                 testy -= directiony
-                            if marked[testy][testx] or level[testy][testx] != self.data[test+1]:
+                            if strict and (marked[testy][testx] or level[testy][testx] != self.data[test+1]):
                                 found = False
                                 break
                         if found:
@@ -101,6 +106,10 @@ class rule:
                                 sety = y
                                 for point in range(0, len(self.result), 2):
                                     direction = self.result[point]
+                                    strict = True
+                                    if direction == any:
+                                        strict = False
+                                        direction = self.data[point+1]
                                     if direction == right:setx += 1
                                     elif direction == left:setx -= 1
                                     elif direction == down:sety += 1
@@ -111,19 +120,68 @@ class rule:
                                     elif direction == toT:
                                         setx -= directionx
                                         sety -= directiony
-                                    level[sety][setx] = self.result[point+1]
-                                    marked[sety][setx] = True
+                                    if strict:
+                                        level[sety][setx] = self.result[point+1]
+                                        marked[sety][setx] = True
                             else:return (self.mode, self.result) # warp
                 except IndexError:pass
 
-def makerule(string):
-    anydir = False
+def expandremote(string):
+    remotes = []
+    convert = None
     for i in range(1, len(string), 2):
-        if string[i] == line:
-            anydir = True
-            break
-    if anydir:return [rule(string.replace(line, x)) for x in (right, up, left, down)]
-    else:return rule(string),
+        if string[i] == remote:remotes.append(i)
+        elif string[i] in (replace, warp, music):
+            convert = i
+            if string[i] != replace:break
+    first = []
+    second = []
+    for point in remotes:
+        if point < convert:first.append(point)
+        else:second.append(point)
+    if len(first) == 0:
+        edit = list(string)
+        second.reverse()
+        for x in second:
+            edit.pop(x)
+            edit.pop(x)
+        return rule(''.join(edit)),
+    else:
+        rules = []
+        remotes.reverse()
+        for length in range(40):
+            edit = list(string)
+            for point in remotes:
+                type = any + edit[point+1]
+                edit.pop(point)
+                edit.pop(point)
+                for _ in range(length):
+                    edit.insert(point, type)
+            if len(''.join(edit)) > 160:break
+            rules.append(rule(''.join(edit)))
+        return rules
+
+def makerule(string):
+    fore = []
+    back = []
+    for i in range(1, len(string), 2):
+        if string[i] == forward:fore.append(i)
+        elif string[i] in (any, remote) and string[i+1] == forward:fore.append(i+1)
+        elif string[i] == backward:back.append(i)
+        elif string[i] in (any, remote) and string[i+1] == backward:back.append(i+1)
+        elif string[i] in (warp, music):break
+    if len(fore) > 0 or len(back) > 0:
+        rules = []
+        edit = list(string)
+        for type in range(3):
+            main = (right, up, left, down)[type]
+            reverse = (left, down, right, up)[type]
+            for i in fore:edit[i] = main
+            for i in back:edit[i] = reverse
+            rules.extend(expandremote(''.join(edit)))
+        return rules
+    else:return expandremote(string)
+    
 def search(level, player):
     back = level[player[1]][player[0]]
     level[player[1]][player[0]] = 'T'
@@ -148,14 +206,14 @@ def search(level, player):
 
 if __name__ == '__main__':
     level = [list(x) for x in [
-        '###############',
-        '#?T-B- =T- -B.#',
-        '###############',
-        '#   TB   BT   #',
-        '###############',
+        '###################',
+        '#?Tr>>A>B=Tr>>C>D.#',
+        '###################',
+        '#  TFDE      AB   #',
+        '###################',
     ]]
     #search(level, (0, 0))
-    rules = makerule('T-B- =T- -B.')
+    rules = makerule('Tr>>A>B=Tr>>C>D.')
     marked = [[False] * len(level[0]) for i in range(len(level))]
     player = (0, 0)
     for rule in rules:
