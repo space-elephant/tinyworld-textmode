@@ -2,10 +2,21 @@
 import sys
 import display
 import curses
-from rules import search, convert
+from rules import search
 import requests
 import argparse
 import os
+import pyrebase
+from copy import deepcopy
+
+config = {
+  "apiKey": "AIzaSyAGqIWxTGH4ePp0-EpQdMXwMiLrNJS_Nns",
+  "authDomain": "tinyworld-textmode.firebaseapp.com",
+  "projectId": "tinyworld-textmode",
+  "storageBucket": "tinyworld-textmode.appspot.com",
+  "messagingSenderId": "873530478598",
+  "appId": "1:873530478598:web:66080cbccf49e9b1cab387"
+}
 
 parser = argparse.ArgumentParser(description='Play T in Y world in your teminal')
 parser.add_argument('-c', '--recolour', action='store_true', help='use colours to represent effects, instead of like the original')
@@ -16,10 +27,27 @@ google = args.google
 copycolor = not args.recolour
 deprotect = args.force_save
 
+if google:
+    config['databaseURL'] = config['authDomain']
+    firebase = pyrebase.initialize_app(config)
+    storage = firebase.storage()
+
 def save(file, data):
     backup = '{}.bak'.format(file)
     with open(backup, 'w') as f:f.write(data)
     os.replace(backup, file)
+    if google:
+        if file == 'data/levels.txt':
+            storage.child("/all0.txt").put("data/levels.txt")
+        else:
+            storage.child(file[6:]).put(file)
+
+def download(file):
+    if google:
+        if file == 'data/levels.txt':
+            storage.child("/all0.txt").download("data/levels.txt")
+        else:
+            storage.child(file[6:]).download(file)
 
 def isall(name):
     if name == 'all0':return True
@@ -32,6 +60,7 @@ def isall(name):
         
 def load(name):
     if isall(name):
+        download('data/levels.txt')
         with open('data/levels.txt') as f:levels = f.readlines()
         with open('data/all.txt') as f:data = f.read()
         with open('data/error.txt') as f:error = list(f.read())
@@ -62,6 +91,7 @@ def load(name):
         points[1][22:22+len(string)] = list(string)
         return points
     try:
+        download('levels/{}.txt'.format(name))
         with open('levels/{}.txt'.format(name)) as f:data = f.read()
         return [list(x) for x in display.display(data)]
     except FileNotFoundError:
@@ -300,6 +330,7 @@ def edit(screen, name, player):
                     if deprotect or not protected:
                         string = ''.join(''.join(x) for x in level)
                         save('levels/{}.txt'.format(name), string)
+                        download('data/levels.txt')
                         with open('data/levels.txt') as f:
                             levels = f.readlines()
                         fullline = name + '\n'
@@ -325,7 +356,7 @@ def edit(screen, name, player):
             elif (command >= ord('A') and command <= ord('Z') or
                   command >= ord('a') and command <= ord('z') or
                   command >= ord('0') and command <= ord('9') or
-                  chr(command) in '`-=[]\\;\',./~!@#$%^&*()_+{}|:"<>?'):
+                  chr(command) in ' `-=[]\\;\',./~!@#$%^&*()_+{}|:"<>?'):
                 level[player[1]][player[0]] = chr(command)
                 player[0] += 1
                 reset = True
@@ -342,8 +373,11 @@ def main(screen):
     name = first
     player = [20, 20]
     edited = False
+    lcopy = None
     while True:
-        if not edited:level = load(name)
+        if lcopy != None:level = lcopy
+        elif not edited:level = load(name)
+        lcopy = deepcopy(level)
         edited = False
         found = False
         for line in range(len(level)-1, -1, -1):
@@ -377,17 +411,25 @@ def main(screen):
             elif command == ord('\t'):
                 name, level = edit(screen, name, player)
                 edited = True
+                lcopy = None
                 break
             now = valid(level, player)
             if now == undo:player = oldplayer
             elif now == restart:break
             if char:
                 data = search(level, player)
-                if data[0] == convert['@']:
+                if data[0] == '@':
                     name = data[1]
+                    lcopy = None
                     break
-
         if level[player[1]][player[0]] == 'Y' and not edited:
             name = next(name)
+            lcopy = None
+        if google and lcopy == None and not edited:
+            screen.clear()
+            level[player[1]][player[0]] = 'T'
+            for i in range(len(level)):
+                screen.addstr(i, 0, ''.join(level[i]), curses.A_DIM)
+            screen.refresh()
 
 curses.wrapper(main)

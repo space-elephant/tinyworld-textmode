@@ -134,6 +134,7 @@ def expandremote(string):
         elif string[i] in (replace, warp, music):
             convert = i
             if string[i] != replace:break
+    if convert == None:return ()
     first = []
     second = []
     for point in remotes:
