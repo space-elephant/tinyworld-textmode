@@ -4,29 +4,17 @@ def sign(x):
     if x > 0:return 1
     return 0
 
-right = 0
-up = 1
-left = 2
-down = 3
-toT = 4
-fromT = 5
-replace = 6
-warp = 7
-music = 8
-end = 9
-
-convert = {
-    '>': right,
-    '^': up,
-    '<': left,
-    'v': down,
-    '(': toT,
-    ')': fromT,
-    '=': replace,
-    '@': warp,
-    'm': music,
-    '.': end,
-}
+right = '>'
+up = '^'
+left = '<'
+down = 'v'
+toT = '('
+fromT = ')'
+replace = '='
+warp = '@'
+music = 'm'
+end = '.'
+line = '-'
 
 class rule:
     def __init__(self, string):
@@ -36,14 +24,14 @@ class rule:
         index = 1
         while True:
             try:
-                if convert[string[index]] >= replace:break
+                if string[index] >= replace:break
             except (KeyError, IndexError):
                 self.valid = False
                 return
-            self.data.append(convert[string[index]])
+            self.data.append(string[index])
             self.data.append(string[index+1])
             index += 2
-        self.mode = convert[string[index]]
+        self.mode = string[index]
         if self.mode == end:
             self.valid = False
             return
@@ -58,7 +46,7 @@ class rule:
                 except IndexError:
                     self.valid = False
                     return
-                try:self.result.append(convert[string[index]])
+                try:self.result.append(string[index])
                 except KeyError:
                     self.valid = False
                     return
@@ -127,7 +115,15 @@ class rule:
                                     marked[sety][setx] = True
                             else:return (self.mode, self.result) # warp
                 except IndexError:pass
-                                
+
+def makerule(string):
+    anydir = False
+    for i in range(1, len(string), 2):
+        if string[i] == line:
+            anydir = True
+            break
+    if anydir:return [rule(string.replace(line, x)) for x in (right, up, left, down)]
+    else:return rule(string),
 def search(level, player):
     back = level[player[1]][player[0]]
     level[player[1]][player[0]] = 'T'
@@ -139,7 +135,7 @@ def search(level, player):
         for x in range(len(level[y])):
             marked[-1].append(False)
             if level[y][x] == '?':
-                rules.append(rule(''.join(level[y][x+1:])))
+                rules.extend(makerule(''.join(level[y][x+1:])))
     for point in rules:
         test = point.match(level, player, marked)
         if test != None:
@@ -153,14 +149,15 @@ def search(level, player):
 if __name__ == '__main__':
     level = [list(x) for x in [
         '###############',
-        '#?T>B> =T> >B.#',
+        '#?T-B- =T- -B.#',
         '###############',
-        '#   TB        #',
+        '#   TB   BT   #',
         '###############',
     ]]
     #search(level, (0, 0))
-    test = rule('T>B> =T> >B.')
+    rules = makerule('T-B- =T- -B.')
     marked = [[False] * len(level[0]) for i in range(len(level))]
     player = (0, 0)
-    test.match(level, player, marked)
+    for rule in rules:
+        rule.match(level, player, marked)
     for line in level:print(''.join(line))
