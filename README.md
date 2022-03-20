@@ -6,5 +6,5 @@ pip3 install requests
 pip3 install argparse
 pip3 install pyrebase
 git clone https://github.com/space-elephant/tinyworld-textmode.git
-./main.py
+./play.py
 ```
