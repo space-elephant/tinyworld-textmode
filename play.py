@@ -8,6 +8,7 @@ import argparse
 import os
 import pyrebase
 from copy import deepcopy
+import threading
 
 config = {
   "apiKey": "AIzaSyAGqIWxTGH4ePp0-EpQdMXwMiLrNJS_Nns",
@@ -47,7 +48,20 @@ def download(file):
         if file == 'data/levels.txt':
             storage.child("/all0.txt").download("data/levels.txt")
         else:
-            storage.child(file[6:]).download(file)
+            valid = True
+            if not deprotect:
+                with open('data/protected.txt') as f:
+                    for line in f.readlines():
+                        if line[:-1] == file[6:-4]:
+                            valid = False
+                            break
+            if valid:
+                storage.child(file[6:]).download(file)
+
+def startdownload(file):
+    if google:
+        thread = threading.Thread(target = download, args=(file,))
+        thread.start()
 
 def isall(name):
     if name == 'all0':return True
@@ -58,9 +72,10 @@ def isall(name):
         if char not in '0123456789':return False
     return True
         
-def load(name):
+def load(name, cached=set()):
     if isall(name):
-        download('data/levels.txt')
+        if google and not (name in cached):
+            download('data/levels.txt')
         with open('data/levels.txt') as f:levels = f.readlines()
         with open('data/all.txt') as f:data = f.read()
         with open('data/error.txt') as f:error = list(f.read())
@@ -91,7 +106,8 @@ def load(name):
         points[1][22:22+len(string)] = list(string)
         return points
     try:
-        download('levels/{}.txt'.format(name))
+        if google and not (name in cached):
+            download('levels/{}.txt'.format(name))
         with open('levels/{}.txt'.format(name)) as f:data = f.read()
         return [list(x) for x in display.display(data)]
     except FileNotFoundError:
@@ -374,9 +390,10 @@ def main(screen):
     player = [20, 20]
     edited = False
     lcopy = None
+    cached = set()
     while True:
         if lcopy != None:level = lcopy
-        elif not edited:level = load(name)
+        elif not edited:level = load(name, cached)
         lcopy = deepcopy(level)
         edited = False
         found = False
@@ -387,6 +404,8 @@ def main(screen):
                     found = True
                     break
             if found:break
+        cached = {next(name)}
+        startdownload('levels/{}.txt'.format(next(name)))
         while level[player[1]][player[0]] != 'Y':
             screen.clear()
             draw(level, player, screen)
@@ -422,14 +441,12 @@ def main(screen):
                     name = data[1]
                     lcopy = None
                     break
+                for item in data[2]:
+                    if not item in cached:
+                        cached.add(item)
+                        startdownload('levels/{}.txt'.format(item))
         if level[player[1]][player[0]] == 'Y' and not edited:
             name = next(name)
             lcopy = None
-        if google and lcopy == None and not edited:
-            screen.clear()
-            level[player[1]][player[0]] = 'T'
-            for i in range(len(level)):
-                screen.addstr(i, 0, ''.join(level[i]), curses.A_DIM)
-            screen.refresh()
 
 curses.wrapper(main)

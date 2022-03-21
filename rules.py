@@ -20,7 +20,7 @@ any = 'a'
 remote = 'r'
 
 class rule:
-    def __init__(self, string):
+    def __init__(self, string, warps):
         self.string = string
         self.valid = True
         self.start = string[0]
@@ -63,6 +63,7 @@ class rule:
                     return
                 self.result.append(string[index])
             self.end = index
+        if self.mode == warp:warps.add(''.join(self.result))
     def match(self, level, player, marked):
         if not self.valid:return
         for y in range(len(level)):
@@ -126,7 +127,7 @@ class rule:
                             else:return (self.mode, self.result) # warp
                 except IndexError:pass
 
-def expandremote(string):
+def expandremote(string, wraps):
     remotes = []
     convert = None
     for i in range(1, len(string), 2):
@@ -146,7 +147,7 @@ def expandremote(string):
         for x in second:
             edit.pop(x)
             edit.pop(x)
-        return rule(''.join(edit)),
+        return rule(''.join(edit), wraps),
     else:
         rules = []
         remotes.reverse()
@@ -159,10 +160,10 @@ def expandremote(string):
                 for _ in range(length):
                     edit.insert(point, type)
             if len(''.join(edit)) > 160:break
-            rules.append(rule(''.join(edit)))
+            rules.append(rule(''.join(edit), wraps))
         return rules
 
-def makerule(string):
+def makerule(string, wraps):
     fore = []
     back = []
     for i in range(1, len(string), 2):
@@ -179,11 +180,12 @@ def makerule(string):
             reverse = (left, down, right, up)[type]
             for i in fore:edit[i] = main
             for i in back:edit[i] = reverse
-            rules.extend(expandremote(''.join(edit)))
+            rules.extend(expandremote(''.join(edit), wraps))
         return rules
-    else:return expandremote(string)
+    else:return expandremote(string, wraps)
     
 def search(level, player):
+    wraps = set()
     back = level[player[1]][player[0]]
     level[player[1]][player[0]] = 'T'
     sound = None
@@ -194,7 +196,7 @@ def search(level, player):
         for x in range(len(level[y])):
             marked[-1].append(False)
             if level[y][x] == '?':
-                rules.extend(makerule(''.join(level[y][x+1:])))
+                rules.extend(makerule(''.join(level[y][x+1:]), wraps))
     for point in rules:
         test = point.match(level, player, marked)
         if test != None:
@@ -203,7 +205,7 @@ def search(level, player):
             else:
                 sound = test[1]
     level[player[1]][player[0]] = back
-    return (music, sound)
+    return (music, sound, wraps)
 
 if __name__ == '__main__':
     level = [list(x) for x in [
