@@ -28,11 +28,6 @@ google = not args.local
 copycolor = not args.recolour
 deprotect = args.force_save
 
-if google:
-    config['databaseURL'] = config['authDomain']
-    firebase = pyrebase.initialize_app(config)
-    storage = firebase.storage()
-
 def save(file, data):
     backup = '{}.bak'.format(file)
     with open(backup, 'w') as f:f.write(data)
@@ -62,6 +57,28 @@ def startdownload(file):
     if google:
         thread = threading.Thread(target = download, args=(file,))
         thread.start()
+
+if google:
+    config['databaseURL'] = config['authDomain']
+    firebase = pyrebase.initialize_app(config)
+    storage = firebase.storage()
+    startdownload('levels/tutorial0.txt')
+    startdownload('levels/tutorial1.txt')
+    startdownload('levels/tutorial8.txt')
+
+print('T in Y World by Tom VII for Ludum Dare 23.')
+print()
+
+start = input('Play (Y/n) ')
+
+if start == '':
+    first = 'tutorial8'
+elif start == 'n' or start == 'N':
+    first = 'tutorial0'
+elif start == 'y' or start == 'Y':
+    first = 'tutorial1'
+else:
+    first = start
 
 def isall(name):
     if name == 'all0':return True
@@ -158,24 +175,6 @@ def draw(data, player, screen):
                                       curses.color_pair(color))
                     except curses.error:pass
     sys.stdout.flush()
-
-print('T in Y World by Tom VII for Ludum Dare 23.')
-print()
-
-    
-if '-y' in sys.argv:start = 'y'
-elif '-n' in sys.argv:start = 'n'
-elif '-e' in sys.argv:start = ''
-else:start = input('Play (Y/n) ')
-
-if start == '':
-    first = 'tutorial8'
-elif start == 'n' or start == 'N':
-    first = 'tutorial0'
-elif start == 'y' or start == 'Y':
-    first = 'tutorial1'
-else:
-    first = start
 
 nonsolid = set(' AEIOY')
 deadly = set('PQRSTUVWXZ')
@@ -390,7 +389,7 @@ def main(screen):
     player = [20, 20]
     edited = False
     lcopy = None
-    cached = set()
+    cached = {'tutorial0', 'tutorial1', 'tutorial8'}
     while True:
         if lcopy != None:level = lcopy
         elif not edited:level = load(name, cached)
