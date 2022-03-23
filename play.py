@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+print('T in Y World by Tom VII for Ludum Dare 23.')
+print()
+
 import sys
 import display
 import curses
@@ -21,8 +24,8 @@ config = {
 
 parser = argparse.ArgumentParser(description='Play T in Y world in your teminal')
 parser.add_argument('-c', '--recolour', action='store_true', help='use colours to represent effects, instead of like the original')
-parser.add_argument('-l', '--local', action='store_true', help='disable google')
-parser.add_argument('-f', '--force-save', action='store_true', help='enables save even onto protected levels, and enables downloading protected levels if -g is set')
+parser.add_argument('-l', '--local', action='store_true', help='use local levels only, without uploading or downloading')
+parser.add_argument('-f', '--force-save', action='store_true', help='enables save onto protected levels, and enables downloading protected levels unless -l is set')
 args = parser.parse_args()
 google = not args.local
 copycolor = not args.recolour
@@ -40,7 +43,7 @@ def save(file, data):
 
 def download(file):
     if google:
-        if file == 'data/levels.txt':
+        if file == 'data/levels.txt':# all0 in firebase is actually levels.txt
             storage.child("/all0.txt").download("data/levels.txt")
         else:
             valid = True
@@ -65,9 +68,6 @@ if google:
     startdownload('levels/tutorial0.txt')
     startdownload('levels/tutorial1.txt')
     startdownload('levels/tutorial8.txt')
-
-print('T in Y World by Tom VII for Ludum Dare 23.')
-print()
 
 start = input('Play (Y/n) ')
 
@@ -135,14 +135,11 @@ def load(name, cached=set()):
         return points
 
 def draw(data, player, screen):
-    #print('draw', sys.stderr)
     for y in range(len(data)):
         for x in range(len(data[y])):
-            #print(y, x, sys.stderr)
             point = data[y][x]
             if point == ' ':
                 if player == [x, y]:
-                    #print(y, x, repr('T'), sys.stderr)
                     try:
                         if copycolor:
                             screen.addstr(y, x, 'T', curses.color_pair(red))
@@ -170,7 +167,6 @@ def draw(data, player, screen):
                     elif point in deadly:color = death
                     else:color = wall
                     if player == [x, y]:color += onspace
-                    #print(y, x, repr(data[y][x]), sys.stderr)
                     try:screen.addstr(y, x, data[y][x],
                                       curses.color_pair(color))
                     except curses.error:pass
@@ -287,20 +283,17 @@ def getlevel(screen, name, x, y):
             screen.refresh()
             data.append(chr(char))
 
-def edit(screen, name, player):
+def edit(screen, name, player, level):
     curses.curs_set(True)
     clipboard = None
     reset = True
     saveline = ''
     while True:
-        level = load(name)
         while True:
             screen.clear()
             draw(level, None, screen)
             screen.addstr(len(level), 1, name)
             screen.addstr(len(level) + 1, 1, saveline)
-            #screen.addstr(len(level) + 1, 1, str(clipboard)[:50])
-            #screen.addstr(len(level) + 2, 1, str(reset))
             screen.refresh()
             screen.move(player[1], player[0])
             saveline = ''
@@ -353,7 +346,6 @@ def edit(screen, name, player):
                             levels.remove(fullline)
                         levels.insert(0, fullline)
                         save('data/levels.txt', ''.join(levels))
-                        # TODO: Use google if -g is passed
             elif command == 7:
                 screen.refresh()
                 name = getlevel(screen, name, 1, len(level))
@@ -375,6 +367,7 @@ def edit(screen, name, player):
                 level[player[1]][player[0]] = chr(command)
                 player[0] += 1
                 reset = True
+        level = load(name)
 
 def main(screen):
     curses.curs_set(False)
@@ -390,6 +383,7 @@ def main(screen):
     edited = False
     lcopy = None
     cached = {'tutorial0', 'tutorial1', 'tutorial8'}
+    again = False
     while True:
         if lcopy != None:level = lcopy
         elif not edited:level = load(name, cached)
@@ -403,7 +397,8 @@ def main(screen):
                     found = True
                     break
             if found:break
-        cached = {next(name)}
+        if not again:cached = {next(name)}
+        again = True
         startdownload('levels/{}.txt'.format(next(name)))
         while level[player[1]][player[0]] != 'Y':
             screen.clear()
@@ -427,7 +422,7 @@ def main(screen):
             elif command == ord('r'):break # restart
             elif command == ord('e') or command == ord('q'):exit()
             elif command == ord('\t'):
-                name, level = edit(screen, name, player)
+                name, level = edit(screen, name, player, lcopy)
                 edited = True
                 lcopy = None
                 break
@@ -439,6 +434,7 @@ def main(screen):
                 if data[0] == '@':
                     name = data[1]
                     lcopy = None
+                    again = False
                     break
                 for item in data[2]:
                     if not item in cached:
@@ -447,5 +443,6 @@ def main(screen):
         if level[player[1]][player[0]] == 'Y' and not edited:
             name = next(name)
             lcopy = None
+            again = False
 
 curses.wrapper(main)
