@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-print('T in Y World by Tom VII for Ludum Dare 23.')
-print()
-
 import sys
 import display
 import curses
@@ -9,7 +6,6 @@ from rules import search
 import requests
 import argparse
 import os
-import pyrebase
 from copy import deepcopy
 import threading
 
@@ -26,25 +22,44 @@ parser = argparse.ArgumentParser(description='Play T in Y world in your teminal'
 parser.add_argument('-c', '--recolour', action='store_true', help='use colours to represent effects, instead of like the original')
 parser.add_argument('-l', '--local', action='store_true', help='use local levels only, without uploading or downloading')
 parser.add_argument('-f', '--force-save', action='store_true', help='enables save onto protected levels, and enables downloading protected levels unless -l is set')
+parser.add_argument('-u', '--upload', action='extend', nargs='+', metavar='level', help='uploads levels and exit')
 args = parser.parse_args()
 google = not args.local
 copycolor = not args.recolour
 deprotect = args.force_save
 
-def save(file, data):
-    backup = '{}.bak'.format(file)
-    with open(backup, 'w') as f:f.write(data)
-    os.replace(backup, file)
-    if google:
-        if file == 'data/levels.txt':
-            storage.child("/all0.txt").put("data/levels.txt")
-        else:
-            storage.child(file[6:]).put(file)
+if args.upload != None:
+    import pyrebase
+    config['databaseURL'] = config['authDomain']
+    firebase = pyrebase.initialize_app(config)
+    storage = firebase.storage()
+    with open('data/levels.txt') as f:levels = f.readlines()
+    order = []
+    for level in levels:
+        if level[:-1] in args.upload:
+            order.append(level)
+    print('Downloading level map')
+    storage.child('/all0.txt').download('data/levels.txt')
+    with open('data/levels.txt') as f:levels = f.readlines()
+    for level in order:
+        if level in levels:levels.remove(level)
+    for i in range(len(order)):
+        levels.insert(i, order[i])
+    with open('data/levels.txt', 'w') as f:f.write(''.join(levels))
+    print('Uploading updated level map')
+    storage.child('/all0.txt').put('data/levels.txt')
+    for level in args.upload:
+        print('Uploading {}'.format(level))
+        storage.child('{}.txt'.format(level)).put('levels/{}.txt'.format(level))
+    exit()
+
+print('T in Y World by Tom VII for Ludum Dare 23.')
+print()
 
 def download(file):
     if google:
         if file == 'data/levels.txt':# all0 in firebase is actually levels.txt
-            storage.child("/all0.txt").download("data/levels.txt")
+            storage.child('/all0.txt').download('data/levels.txt')
         else:
             valid = True
             if not deprotect:
@@ -62,12 +77,23 @@ def startdownload(file):
         thread.start()
 
 if google:
+    import pyrebase
     config['databaseURL'] = config['authDomain']
     firebase = pyrebase.initialize_app(config)
     storage = firebase.storage()
     startdownload('levels/tutorial0.txt')
     startdownload('levels/tutorial1.txt')
     startdownload('levels/tutorial8.txt')
+
+def save(file, data):
+    backup = '{}.bak'.format(file)
+    with open(backup, 'w') as f:f.write(data)
+    os.replace(backup, file)
+    if google:
+        if file == 'data/levels.txt':
+            storage.child('/all0.txt').put('data/levels.txt')
+        else:
+            storage.child(file[6:]).put(file)
 
 start = input('Play (Y/n) ')
 
