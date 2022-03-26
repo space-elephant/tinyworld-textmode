@@ -18,6 +18,7 @@ forward = ']'
 backward = '['
 any = 'a'
 remote = 'r'
+matchT = 't'
 
 class rule:
     def __init__(self, string, warps):
@@ -51,7 +52,10 @@ class rule:
                 except KeyError:
                     self.valid = False
                     return
-                self.result.append(string[index+1])
+                try:self.result.append(string[index+1])
+                except IndexError:
+                    self.valid = False
+                    return
             self.end = index
         else:
             while True:
@@ -83,9 +87,13 @@ class rule:
                         for test in range(0, len(self.data), 2):
                             strict = True
                             direction = self.data[test]
+                            object = self.data[test+1]
                             if direction == any:
                                 strict = False
                                 direction = self.data[test+1]
+                            elif direction == matchT:
+                                direction = self.data[test+1]
+                                object = 'T'
                             if direction == right:testx += 1
                             elif direction == left:testx -= 1
                             elif direction == down:testy += 1
@@ -96,7 +104,7 @@ class rule:
                             elif direction == toT:
                                 testx -= directionx
                                 testy -= directiony
-                            if strict and (marked[testy][testx] or level[testy][testx] != self.data[test+1]):
+                            if strict and (marked[testy][testx] or level[testy][testx] != object):
                                 found = False
                                 break
                         if found:
@@ -127,7 +135,7 @@ class rule:
                             else:return (self.mode, self.result) # warp
                 except IndexError:pass
 
-def expandremote(string, wraps):
+def expandremote(string, warps):
     remotes = []
     convert = None
     for i in range(1, len(string), 2):
@@ -147,7 +155,7 @@ def expandremote(string, wraps):
         for x in second:
             edit.pop(x)
             edit.pop(x)
-        return rule(''.join(edit), wraps),
+        return rule(''.join(edit), warps),
     else:
         rules = []
         remotes.reverse()
@@ -160,17 +168,17 @@ def expandremote(string, wraps):
                 for _ in range(length):
                     edit.insert(point, type)
             if len(''.join(edit)) > 160:break
-            rules.append(rule(''.join(edit), wraps))
+            rules.append(rule(''.join(edit), warps))
         return rules
 
-def makerule(string, wraps):
+def makerule(string, warps):
     fore = []
     back = []
     for i in range(1, len(string), 2):
         if string[i] == forward:fore.append(i)
-        elif string[i] in (any, remote) and string[i+1] == forward:fore.append(i+1)
+        elif string[i] in (any, remote, matchT) and string[i+1] == forward:fore.append(i+1)
         elif string[i] == backward:back.append(i)
-        elif string[i] in (any, remote) and string[i+1] == backward:back.append(i+1)
+        elif string[i] in (any, remote, matchT) and string[i+1] == backward:back.append(i+1)
         elif string[i] in (warp, music):break
     if len(fore) > 0 or len(back) > 0:
         rules = []
@@ -180,12 +188,12 @@ def makerule(string, wraps):
             reverse = (left, down, right, up)[type]
             for i in fore:edit[i] = main
             for i in back:edit[i] = reverse
-            rules.extend(expandremote(''.join(edit), wraps))
+            rules.extend(expandremote(''.join(edit), warps))
         return rules
-    else:return expandremote(string, wraps)
+    else:return expandremote(string, warps)
     
 def search(level, player):
-    wraps = set()
+    warps = set()
     back = level[player[1]][player[0]]
     level[player[1]][player[0]] = 'T'
     sound = None
@@ -196,7 +204,7 @@ def search(level, player):
         for x in range(len(level[y])):
             marked[-1].append(False)
             if level[y][x] == '?':
-                rules.extend(makerule(''.join(level[y][x+1:]), wraps))
+                rules.extend(makerule(''.join(level[y][x+1:]), warps))
     for point in rules:
         test = point.match(level, player, marked)
         if test != None:
@@ -204,21 +212,21 @@ def search(level, player):
                 return (warp, ''.join(test[1]))
             else:
                 sound = test[1]
-    level[player[1]][player[0]] = back
-    return (music, sound, wraps)
+    if level[player[1]][player[0]] == 'T':
+        level[player[1]][player[0]] = back
+    return (music, sound, warps)
 
 if __name__ == '__main__':
     level = [list(x) for x in [
         '###################',
-        '#?Tr>>A>B=Tr>>C>D.#',
+        '#                 #',
         '###################',
-        '#  TFDE      AB   #',
+        '#  FT             #',
         '###################',
     ]]
     #search(level, (0, 0))
-    rules = makerule('Tr>>A>B=Tr>>C>D.')
+    rule = rule('Ft>=Z>B.', [])
     marked = [[False] * len(level[0]) for i in range(len(level))]
     player = (0, 0)
-    for rule in rules:
-        rule.match(level, player, marked)
+    rule.match(level, player, marked)
     for line in level:print(''.join(line))
