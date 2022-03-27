@@ -212,8 +212,7 @@ def search(level, player):
                 return (warp, ''.join(test[1]))
             else:
                 sound = test[1]
-    if level[player[1]][player[0]] == 'T':
-        level[player[1]][player[0]] = back
+    level[player[1]][player[0]] = back
     return (music, sound, warps)
 
 if __name__ == '__main__':

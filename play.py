@@ -8,6 +8,7 @@ import argparse
 import os
 from copy import deepcopy
 import threading
+from playsound import playsound
 
 config = {
   "apiKey": "AIzaSyAGqIWxTGH4ePp0-EpQdMXwMiLrNJS_Nns",
@@ -95,7 +96,7 @@ def save(file, data):
         else:
             storage.child(file[6:]).put(file)
 
-start = input('Play (Y/n) ')
+start = input('Play? (Y/n) ')
 
 if start == '':
     first = 'tutorial8'
@@ -268,7 +269,7 @@ colors = {
     'T': (red, curses.A_DIM),
     'U': (yellow, 0),
     'V': (red, 0),
-    'W': (yellow, 0),
+    'W': (red, 0),
     'X': (magenta, 0),
     'Y': (yellow, 0),
     'Z': (magenta, curses.A_DIM),
