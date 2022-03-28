@@ -19,6 +19,7 @@ backward = '['
 any = 'a'
 remote = 'r'
 matchT = 't'
+arrow = '-'
 
 class rule:
     def __init__(self, string, warps):
@@ -135,6 +136,18 @@ class rule:
                             else:return (self.mode, self.result) # warp
                 except IndexError:pass
 
+def expandarrow(string, warps):
+    rules = []
+    arrows = []
+    for i in range(1, len(string), 2):
+        if string[i] == arrow:arrows.append(i)
+        elif string[i] == any and string[i+1] == arrow:arrows.append(i+1)
+    extend = list(string)
+    for object in right, up, left, down:
+        for point in arrows:extend[point] = object
+        rules.append(rule(''.join(extend), warps))
+    return rules
+
 def expandremote(string, warps):
     remotes = []
     convert = None
@@ -155,7 +168,7 @@ def expandremote(string, warps):
         for x in second:
             edit.pop(x)
             edit.pop(x)
-        return rule(''.join(edit), warps),
+        return expandarrow(''.join(edit), warps)
     else:
         rules = []
         remotes.reverse()
@@ -168,7 +181,7 @@ def expandremote(string, warps):
                 for _ in range(length):
                     edit.insert(point, type)
             if len(''.join(edit)) > 160:break
-            rules.append(rule(''.join(edit), warps))
+            rules.extend(expandarrow(''.join(edit), warps))
         return rules
 
 def makerule(string, warps):
@@ -218,14 +231,15 @@ def search(level, player):
 if __name__ == '__main__':
     level = [list(x) for x in [
         '###################',
-        '#                 #',
-        '###################',
-        '#  FT             #',
+        '#    FT      T  F #',
+        '#            F  T #',
+        '#  F T   TF       #',
         '###################',
     ]]
     #search(level, (0, 0))
-    rule = rule('Ft>=Z>B.', [])
+    rules = makerule('F-T=Z-B.', [])
     marked = [[False] * len(level[0]) for i in range(len(level))]
     player = (0, 0)
-    rule.match(level, player, marked)
+    for rule in rules:
+        rule.match(level, player, marked)
     for line in level:print(''.join(line))
