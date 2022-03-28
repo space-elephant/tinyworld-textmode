@@ -143,6 +143,7 @@ def expandarrow(string, warps):
         if string[i] == arrow:arrows.append(i)
         elif string[i] == any and string[i+1] == arrow:arrows.append(i+1)
     extend = list(string)
+    if arrows == []:return rule(string, warps),
     for object in right, up, left, down:
         for point in arrows:extend[point] = object
         rules.append(rule(''.join(extend), warps))
