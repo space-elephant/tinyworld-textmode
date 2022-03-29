@@ -16,6 +16,8 @@ music = 'm'
 end = '.'
 forward = ']'
 backward = '['
+turnleft = '{'
+turnright = '}'
 any = 'a'
 remote = 'r'
 matchT = 't'
@@ -136,19 +138,6 @@ class rule:
                             else:return (self.mode, self.result) # warp
                 except IndexError:pass
 
-def expandarrow(string, warps):
-    rules = []
-    arrows = []
-    for i in range(1, len(string), 2):
-        if string[i] == arrow:arrows.append(i)
-        elif string[i] == any and string[i+1] == arrow:arrows.append(i+1)
-    extend = list(string)
-    if arrows == []:return rule(string, warps),
-    for object in right, up, left, down:
-        for point in arrows:extend[point] = object
-        rules.append(rule(''.join(extend), warps))
-    return rules
-
 def expandremote(string, warps):
     remotes = []
     convert = None
@@ -169,7 +158,7 @@ def expandremote(string, warps):
         for x in second:
             edit.pop(x)
             edit.pop(x)
-        return expandarrow(''.join(edit), warps)
+        return rule(''.join(edit), warps),
     else:
         rules = []
         remotes.reverse()
@@ -182,26 +171,37 @@ def expandremote(string, warps):
                 for _ in range(length):
                     edit.insert(point, type)
             if len(''.join(edit)) > 160:break
-            rules.extend(expandarrow(''.join(edit), warps))
+            rules.append(rule(''.join(edit), warps))
         return rules
 
 def makerule(string, warps):
     fore = []
     back = []
+    leftt = []
+    rightt = []
     for i in range(1, len(string), 2):
-        if string[i] == forward:fore.append(i)
-        elif string[i] in (any, remote, matchT) and string[i+1] == forward:fore.append(i+1)
+        if string[i] in (any, remote, matchT):
+            if string[i+1] == forward:fore.append(i+1)
+            elif string[i+1] == backward:back.append(i+1)
+            elif string[i+1] == turnleft:leftt.append(i+1)
+            elif string[i+1] == turnright:rightt.append(i+1)
+        elif string[i] == forward:fore.append(i)
         elif string[i] == backward:back.append(i)
-        elif string[i] in (any, remote, matchT) and string[i+1] == backward:back.append(i+1)
+        elif string[i] == turnleft:leftt.append(i)
+        elif string[i] == turnright:rightt.append(i)
         elif string[i] in (warp, music):break
-    if len(fore) > 0 or len(back) > 0:
+    if len(fore) > 0 or len(back) > 0 or len(leftt) > 0 or len(rightt) > 0:
         rules = []
         edit = list(string)
-        for type in range(3):
+        for type in range(4):
             main = (right, up, left, down)[type]
             reverse = (left, down, right, up)[type]
+            rleft = (up, left, down, right)[type]
+            rright = (down, right, up, left)[type]
             for i in fore:edit[i] = main
             for i in back:edit[i] = reverse
+            for i in leftt:edit[i] = rleft
+            for i in rightt:edit[i] = rright
             rules.extend(expandremote(''.join(edit), warps))
         return rules
     else:return expandremote(string, warps)
@@ -238,7 +238,7 @@ if __name__ == '__main__':
         '###################',
     ]]
     #search(level, (0, 0))
-    rules = makerule('F-T=Z-B.', [])
+    rules = makerule('F[T=Z[B.', [])
     marked = [[False] * len(level[0]) for i in range(len(level))]
     player = (0, 0)
     for rule in rules:
