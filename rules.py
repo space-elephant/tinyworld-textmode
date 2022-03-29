@@ -96,7 +96,7 @@ class rule:
                                 direction = self.data[test+1]
                             elif direction == matchT:
                                 direction = self.data[test+1]
-                                object = 'T'
+                                object = ''
                             if direction == right:testx += 1
                             elif direction == left:testx -= 1
                             elif direction == down:testy += 1
@@ -107,7 +107,7 @@ class rule:
                             elif direction == toT:
                                 testx -= directionx
                                 testy -= directiony
-                            if strict and (marked[testy][testx] or level[testy][testx] != object):
+                            if strict and (marked[testy][testx] or level[testy][testx] != object or object == '' and testx == player[0] and testy == player[1]):
                                 found = False
                                 break
                         if found:
@@ -118,10 +118,14 @@ class rule:
                                 sety = y
                                 for point in range(0, len(self.result), 2):
                                     direction = self.result[point]
+                                    object = self.data[point+1]
                                     strict = True
                                     if direction == any:
                                         strict = False
                                         direction = self.data[point+1]
+                                    elif direction == matchT:
+                                        direction = self.data[test+1]
+                                        object = ''
                                     if direction == right:setx += 1
                                     elif direction == left:setx -= 1
                                     elif direction == down:sety += 1
@@ -133,8 +137,12 @@ class rule:
                                         setx -= directionx
                                         sety -= directiony
                                     if strict:
-                                        level[sety][setx] = self.result[point+1]
-                                        marked[sety][setx] = True
+                                        if object == '':
+                                            player[0] = setx
+                                            player[1] = sety
+                                        else:
+                                            level[sety][setx] = self.result[point+1]
+                                            marked[sety][setx] = True
                             else:return (self.mode, self.result) # warp
                 except IndexError:pass
 
