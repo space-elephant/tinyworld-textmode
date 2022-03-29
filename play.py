@@ -393,6 +393,7 @@ def edit(screen, name, player, level):
                   chr(command) in ' `-=[]\\;\',./~!@#$%^&*()_+{}|:"<>?'):
                 level[player[1]][player[0]] = chr(command)
                 player[0] += 1
+                if player[0] >= len(level[0]):player[0] = len(level[0])-1
                 reset = True
         level = load(name)
 
