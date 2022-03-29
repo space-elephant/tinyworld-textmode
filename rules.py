@@ -21,11 +21,9 @@ turnright = '}'
 any = 'a'
 remote = 'r'
 matchT = 't'
-arrow = '-'
 
 class rule:
     def __init__(self, string, warps):
-        self.string = string
         self.valid = True
         self.start = string[0]
         self.data = []
@@ -107,7 +105,7 @@ class rule:
                             elif direction == toT:
                                 testx -= directionx
                                 testy -= directiony
-                            if strict and (marked[testy][testx] or level[testy][testx] != object or object == '' and testx == player[0] and testy == player[1]):
+                            if strict and (marked[testy][testx] or (level[testy][testx] != object and not(object == '' and testx == player[0] and testy == player[1]))):
                                 found = False
                                 break
                         if found:
@@ -240,15 +238,16 @@ def search(level, player):
 if __name__ == '__main__':
     level = [list(x) for x in [
         '###################',
-        '#    FT      T  F #',
-        '#            F  T #',
-        '#  F T   TF       #',
+        '#                 #',
+        '#  !              #',
+        '#                 #',
         '###################',
     ]]
     #search(level, (0, 0))
-    rules = makerule('F[T=Z[B.', [])
+    rules = makerule('!t>=Y.', [])
     marked = [[False] * len(level[0]) for i in range(len(level))]
-    player = (0, 0)
+    player = (4, 2)
+    level[player[1]][player[0]] = 'T'
     for rule in rules:
         rule.match(level, player, marked)
     for line in level:print(''.join(line))
