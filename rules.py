@@ -73,76 +73,74 @@ class rule:
         if not self.valid:return
         for y in range(len(level)):
             for x in range(len(level[y])):
-                try:
-                    playerrelative = (x - player[0], y - player[1])
-                    directionx, directiony = 0, 0
-                    if abs(playerrelative[0]) >= abs(playerrelative[1]):
-                        directionx = int(sign(playerrelative[0]))
-                    else:
-                        directiony = int(sign(playerrelative[1]))
+                playerrelative = (x - player[0], y - player[1])
+                directionx, directiony = 0, 0
+                if abs(playerrelative[0]) >= abs(playerrelative[1]):
+                    directionx = int(sign(playerrelative[0]))
+                else:
+                    directiony = int(sign(playerrelative[1]))
 
-                    if not marked[y][x] and level[y][x] == self.start:
-                        testx = x
-                        testy = y
-                        found = True
-                        for test in range(0, len(self.data), 2):
-                            strict = True
-                            direction = self.data[test]
-                            object = self.data[test+1]
-                            if direction == any:
-                                strict = False
-                                direction = self.data[test+1]
-                            elif direction == matchT:
-                                direction = self.data[test+1]
-                                object = ''
-                            if direction == right:testx += 1
-                            elif direction == left:testx -= 1
-                            elif direction == down:testy += 1
-                            elif direction == up:testy -= 1
-                            elif direction == fromT:
-                                testx += directionx
-                                testy += directiony
-                            elif direction == toT:
-                                testx -= directionx
-                                testy -= directiony
-                            if strict and (marked[testy][testx] or (level[testy][testx] != object and not(object == '' and testx == player[0] and testy == player[1]))):
-                                found = False
-                                break
-                        if found:
-                            if self.mode == replace:
-                                marked[y][x] = True
-                                level[y][x] = self.newstart
-                                setx = x
-                                sety = y
-                                for point in range(0, len(self.result), 2):
-                                    direction = self.result[point]
-                                    object = self.data[point+1]
-                                    strict = True
-                                    if direction == any:
-                                        strict = False
-                                        direction = self.data[point+1]
-                                    elif direction == matchT:
-                                        direction = self.data[test+1]
-                                        object = ''
-                                    if direction == right:setx += 1
-                                    elif direction == left:setx -= 1
-                                    elif direction == down:sety += 1
-                                    elif direction == up:sety -= 1
-                                    elif direction == fromT:
-                                        setx += directionx
-                                        sety += directiony
-                                    elif direction == toT:
-                                        setx -= directionx
-                                        sety -= directiony
-                                    if strict:
-                                        if object == '':
-                                            player[0] = setx
-                                            player[1] = sety
-                                        else:
-                                            level[sety][setx] = self.result[point+1]
-                                            marked[sety][setx] = True
-                            else:return (self.mode, self.result) # warp
-                except IndexError:pass
+                if not marked[y][x] and level[y][x] == self.start:
+                    testx = x
+                    testy = y
+                    found = True
+                    for test in range(0, len(self.data), 2):
+                        strict = True
+                        direction = self.data[test]
+                        object = self.data[test+1]
+                        if direction == any:
+                            strict = False
+                            direction = self.data[test+1]
+                        elif direction == matchT:
+                            direction = self.data[test+1]
+                            object = ''
+                        if direction == right:testx += 1
+                        elif direction == left:testx -= 1
+                        elif direction == down:testy += 1
+                        elif direction == up:testy -= 1
+                        elif direction == fromT:
+                            testx += directionx
+                            testy += directiony
+                        elif direction == toT:
+                            testx -= directionx
+                            testy -= directiony
+                        if strict and (marked[testy][testx] or (level[testy][testx] != object and not(object == '' and testx == player[0] and testy == player[1]))):
+                            found = False
+                            break
+                    if found:
+                        if self.mode == replace:
+                            marked[y][x] = True
+                            level[y][x] = self.newstart
+                            setx = x
+                            sety = y
+                            for point in range(0, len(self.result), 2):
+                                direction = self.result[point]
+                                object = self.result[point+1]
+                                strict = True
+                                if direction == any:
+                                    strict = False
+                                    direction = self.data[point+1]
+                                elif direction == matchT:
+                                    direction = self.data[test+1]
+                                    object = ''
+                                if direction == right:setx += 1
+                                elif direction == left:setx -= 1
+                                elif direction == down:sety += 1
+                                elif direction == up:sety -= 1
+                                elif direction == fromT:
+                                    setx += directionx
+                                    sety += directiony
+                                elif direction == toT:
+                                    setx -= directionx
+                                    sety -= directiony
+                                if strict:
+                                    if object == '':
+                                        player[0] = setx
+                                        player[1] = sety
+                                    else:
+                                        level[sety][setx] = object
+                                        marked[sety][setx] = True
+                        else:return (self.mode, self.result) # warp
 
 def expandremote(string, warps):
     remotes = []
@@ -239,15 +237,15 @@ if __name__ == '__main__':
     level = [list(x) for x in [
         '###################',
         '#                 #',
-        '#  !              #',
+        '#  ABCD           #',
         '#                 #',
         '###################',
     ]]
     #search(level, (0, 0))
-    rules = makerule('!t>=Y.', [])
+    rule = rule('A>B=E>F>G>H.', [])
     marked = [[False] * len(level[0]) for i in range(len(level))]
-    player = (4, 2)
+    player = (0, 0)
     level[player[1]][player[0]] = 'T'
-    for rule in rules:
-        rule.match(level, player, marked)
+    #for rule in rules:
+    rule.match(level, player, marked)
     for line in level:print(''.join(line))
