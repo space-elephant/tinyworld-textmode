@@ -104,7 +104,11 @@ class rule:
                         elif direction == toT:
                             testx -= directionx
                             testy -= directiony
-                        if strict and (marked[testy][testx] or (level[testy][testx] != object and not(object == '' and testx == player[0] and testy == player[1]))):
+                        try:
+                            if strict and (marked[testy][testx] or (level[testy][testx] != object and not(object == '' and testx == player[0] and testy == player[1]))):
+                                found = False
+                                break
+                        except IndexError:
                             found = False
                             break
                     if found:
@@ -113,16 +117,19 @@ class rule:
                             level[y][x] = self.newstart
                             setx = x
                             sety = y
+                            print(self.result)
                             for point in range(0, len(self.result), 2):
                                 direction = self.result[point]
                                 object = self.result[point+1]
                                 strict = True
+                                print(object, direction)
                                 if direction == any:
                                     strict = False
                                     direction = self.data[point+1]
                                 elif direction == matchT:
-                                    direction = self.data[test+1]
+                                    direction = object
                                     object = ''
+                                print(object, direction)
                                 if direction == right:setx += 1
                                 elif direction == left:setx -= 1
                                 elif direction == down:sety += 1
@@ -135,11 +142,16 @@ class rule:
                                     sety -= directiony
                                 if strict:
                                     if object == '':
-                                        player[0] = setx
-                                        player[1] = sety
+                                        if setx >= 0 and sety >= 0 and setx < 40 and sety < 25:
+                                            player[0] = setx
+                                            player[1] = sety
+                                            marked[sety][setx] = True
+                                        else:return
                                     else:
-                                        level[sety][setx] = object
-                                        marked[sety][setx] = True
+                                        if setx >= 0 and sety >= 0 and setx < 40 and sety < 25:
+                                            level[sety][setx] = object
+                                            marked[sety][setx] = True
+                                        else:return
                         else:return (self.mode, self.result) # warp
 
 def expandremote(string, warps):
@@ -214,6 +226,8 @@ def search(level, player):
     warps = set()
     back = level[player[1]][player[0]]
     level[player[1]][player[0]] = 'T'
+    playerx = player[1]
+    playery = player[0]
     sound = None
     rules = []
     marked = []
@@ -230,22 +244,22 @@ def search(level, player):
                 return (warp, ''.join(test[1]))
             else:
                 sound = test[1]
-    level[player[1]][player[0]] = back
+    level[playerx][playery] = back
     return (music, sound, warps)
 
 if __name__ == '__main__':
     level = [list(x) for x in [
         '###################',
         '#                 #',
-        '#  ABCD           #',
+        '#  ####           #',
         '#                 #',
         '###################',
     ]]
     #search(level, (0, 0))
-    rule = rule('A>B=E>F>G>H.', [])
+    rule = rule('#tv=#t^.', [])
     marked = [[False] * len(level[0]) for i in range(len(level))]
-    player = (0, 0)
-    level[player[1]][player[0]] = 'T'
+    player = [4, 3]    
     #for rule in rules:
     rule.match(level, player, marked)
+    level[player[1]][player[0]] = 'T'
     for line in level:print(''.join(line))
