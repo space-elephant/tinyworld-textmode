@@ -117,19 +117,16 @@ class rule:
                             level[y][x] = self.newstart
                             setx = x
                             sety = y
-                            print(self.result)
                             for point in range(0, len(self.result), 2):
                                 direction = self.result[point]
                                 object = self.result[point+1]
                                 strict = True
-                                print(object, direction)
                                 if direction == any:
                                     strict = False
                                     direction = self.data[point+1]
                                 elif direction == matchT:
                                     direction = object
                                     object = ''
-                                print(object, direction)
                                 if direction == right:setx += 1
                                 elif direction == left:setx -= 1
                                 elif direction == down:sety += 1
