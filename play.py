@@ -24,10 +24,13 @@ parser.add_argument('-c', '--recolour', action='store_true', help='use colours t
 parser.add_argument('-l', '--local', action='store_true', help='use local levels only, without uploading or downloading')
 parser.add_argument('-f', '--force-save', action='store_true', help='enables save onto protected levels, and enables downloading protected levels unless -l is set')
 parser.add_argument('-u', '--upload', action='extend', nargs='+', metavar='level', help='uploads levels and exit')
+parser.add_argument('-g', '--goto', action='store', metavar='level', help='start on a specific level')
 args = parser.parse_args()
 google = not args.local
 copycolor = not args.recolour
 deprotect = args.force_save
+if args.goto == None:first = None
+else:first = args.goto
 
 if args.upload != None:
     import pyrebase
@@ -96,16 +99,17 @@ def save(file, data):
         else:
             storage.child(file[6:]).put(file)
 
-start = input('Play? (Y/n) ')
+if first == None:
+    start = input('Play? (Y/n) ')
 
-if start == '':
-    first = 'tutorial8'
-elif start == 'n' or start == 'N':
-    first = 'tutorial0'
-elif start == 'y' or start == 'Y':
-    first = 'tutorial1'
-else:
-    first = start
+    if start == '':
+        first = 'tutorial8'
+    elif start == 'n' or start == 'N':
+        first = 'tutorial0'
+    elif start == 'y' or start == 'Y':
+        first = 'tutorial1'
+    else:
+        first = start
 
 def isall(name):
     if name == 'all0':return True
