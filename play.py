@@ -175,10 +175,10 @@ def draw(data, player, screen):
                         if copycolor:
                             screen.addstr(y, x, 'T', curses.color_pair(red))
                         else:
-                            screen.addstr(y, x, 'T', curses.color_pair(onspace))
+                            screen.addstr(y, x, 'T', curses.color_pair(green))
                     except curses.error:pass
             elif point == 'Y' and not copycolor:
-                try:screen.addstr(y, x, 'Y', curses.color_pair(onspace))
+                try:screen.addstr(y, x, 'Y', curses.color_pair(green))
                 except curses.error:pass
             else:
                 if copycolor:
@@ -194,10 +194,10 @@ def draw(data, player, screen):
                                            curses.color_pair(color) | flag)
                     except curses.error:pass
                 else:
-                    if point in nonsolid:color = soft
-                    elif point in deadly:color = death
-                    else:color = wall
-                    if player == [x, y]:color += onspace
+                    if point in nonsolid:color = blue
+                    elif point in deadly:color = red
+                    else:color = white
+                    if player == [x, y]:color += 1
                     try:screen.addstr(y, x, data[y][x],
                                       curses.color_pair(color))
                     except curses.error:pass
@@ -241,14 +241,6 @@ red = 4
 yellow = 5
 white = 6
 magenta = 7
-
-onspace = green
-death = red
-ondeath = yellow
-soft = blue
-onsoft = cyan
-wall = white
-onwall = magenta
 
 colors = {
     'A': (blue, 0),
@@ -472,6 +464,7 @@ def main(screen):
                     if not item in cached:
                         cached.add(item)
                         startdownload('levels/{}.txt'.format(item))
+            if now == undo and valid(level, player) == restart:break
         if level[player[1]][player[0]] == 'Y' and not edited:
             name = next(name)
             lcopy = None
