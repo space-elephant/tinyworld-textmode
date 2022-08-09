@@ -63,6 +63,9 @@ class rule:
                 index += 1
                 try:
                     if string[index] == '.':break
+                    elif not string[index] in '0123456789abcdefghijklmnopqrstuvwxyz':
+                        self.valid = False
+                        return
                 except IndexError:
                     self.valid = False
                     return
