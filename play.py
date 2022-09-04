@@ -85,9 +85,10 @@ if google:
     config['databaseURL'] = config['authDomain']
     firebase = pyrebase.initialize_app(config)
     storage = firebase.storage()
-    startdownload('levels/tutorial0.txt')
-    startdownload('levels/tutorial1.txt')
-    startdownload('levels/tutorial8.txt')
+    if deprotect:
+        startdownload('levels/tutorial0.txt')
+        startdownload('levels/tutorial1.txt')
+        startdownload('levels/tutorial8.txt')
 
 def save(file, data):
     backup = '{}.bak'.format(file)
