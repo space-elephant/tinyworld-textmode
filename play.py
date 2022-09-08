@@ -43,7 +43,10 @@ if args.upload != None:
         if level[:-1] in args.upload:
             order.append(level)
     print('Downloading level map')
-    storage.child('/all0.txt').download('data/levels.txt')
+    try:
+        storage.child('/all0.txt').download('data/levels.txt')
+    except TypeError:# terrible hack for pyrebase4 until I get a better solution
+        storage.child('/all0.txt').download('', 'data/levels.txt')
     with open('data/levels.txt') as f:levels = f.readlines()
     for level in order:
         if level in levels:levels.remove(level)
